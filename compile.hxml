@@ -1,0 +1,4 @@
+-cmd ocamlc -o invoice invoice.ml
+-cmd cd examples/imaginsoft
+-cmd ./../../invoice list
+-cmd ./../../invoice generate -value 55 -series IMG -rate 9.25
