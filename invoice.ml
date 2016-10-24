@@ -1,4 +1,4 @@
-(* open Yojson.Basic.Util *)
+open Yojson.Basic.Util
 open Str
 open Printf
 open Arg
@@ -17,7 +17,7 @@ type company_details =
 	| BankAccount of string
 	| BankName of string
 ;;
-type input_data =
+(* type input_data =
 	| InvoiceSeries
 	| InvoiceNr
 	| InvoiceDate
@@ -32,7 +32,7 @@ type input_data =
 	| AmountTotal
 	| Client of company_details
 	| Contractor of company_details
-;;
+;; *)
 
 let command = ref Help
 let amount = ref 0
@@ -50,7 +50,7 @@ let command_from_string c = match c with
 	| "help" | _ -> Help
 	
 ;;
-let arg_from_string c = match c with
+(* let arg_from_string c = match c with
 	| "::email::" -> Email
 	| "::contractor_name::" -> Contractor.Name
 	| "::rate::" -> HourlyRate
@@ -59,7 +59,7 @@ let arg_from_string c = match c with
 	| "::amount_total::" -> AmountTotal
 	| "::date::" -> InvoiceDate
 	| _ -> ()
-;;
+;; *)
 let value_for_placeholder placeholder = match placeholder with
 	| "::email::" -> !email
 	| "::contractor_name::" -> placeholder
