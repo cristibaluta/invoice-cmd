@@ -1,10 +1,10 @@
 # Invoice cmd
 Command line app to generate invoices. Data is stored in jsons so it will be easy to transfer and use in another places.
 
-![Screenshot]()
+![Screenshot](https://s13.postimg.org/ndmkhvfyf/Screen_Shot_2016_10_24_at_09_47_46.png)
 
 ### Motivation
-If you're like me, you probably have a monster like Word suite installed on you computer just to generate invoices. That hundreds of mega bytes are staying on my head knowing they are not used. Why not generate them from the command line, we are programmers after all and we love the command line?
+If you're like me, you probably organised your life away from useless softwares like Microsoft Word suite. The hundreds of mega bytes that it takes. Why not generate them from the command line? Ee are programmers after all and we love the command line.
 
 ### Commands
 
@@ -14,7 +14,7 @@ List the invoices you have generated in the past:
 
 	invoice list
 
-Generate a new invoice. Common data from the last invoice will be used (and incremented when necessary) in the current invoice:
+Generate a new invoice. Data from the last invoice will be used (and incremented when necessary) in the current invoice. In this way if details changes you don't need to change the template data
 
 	invoice generate -date 2016.11.16 -hours 184 -value 5776 -tva 0 -rate 9.25 -exchange-rate 4.44 -series IMG -nr 66
 
@@ -24,11 +24,9 @@ Generate a new invoice. Common data from the last invoice will be used (and incr
 
 	sudo ./invoice install
 
- 2. Download the sources and compile yourself. To compile you need the Ocaml compiler.
+ 2. Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies.
  	
-	haxelib install hxcpp // Installs the hxcpp dependency
-	haxe compile.hxml // Compile the application
-	cd build
+	haxe compile.hxml // Compile and test the app
 	sudo ./invoice install
 	invoice
 
