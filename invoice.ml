@@ -2,6 +2,7 @@ open Yojson.Basic.Util
 open Str
 open Printf
 open Arg
+open Unix
 
 type commands = 
 	| Generate
@@ -131,9 +132,14 @@ match !command with
 		let children = Sys.readdir dir in
 		let last_invoice_dir = Array.get children (Array.length children -1) in
 		let template = read_file (dir ^ "/0/template.html") in
-	  	let file_o = open_out (last_invoice_dir ^ "/invoice.html") in
+		let html_o_path = last_invoice_dir ^ "/invoice.html" in
+		let pdf_o_path = last_invoice_dir ^ "/invoice.pdf" in
+	  	let file_o = open_out html_o_path in
 	  	write_file file_o template;
 	  	close_out file_o;
+		print_endline ("Thank you for using invoice cmd!");
+		(* (try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
+		Unix_error(err, _, _) -> printf "Install wkhtmltopdf to generate pdfs"); *)
 	| List ->
 		print_endline ("List existing invoices");
 		let dir = Sys.getcwd() in
@@ -141,7 +147,6 @@ match !command with
 		Array.iter print_endline children;
 	| Help ->
 		print_endline ("Print help");
-		print_endline ("Thank you for using invoice cmd!");
 
 end
 
