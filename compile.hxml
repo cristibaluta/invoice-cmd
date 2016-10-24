@@ -1,4 +1,4 @@
 -cmd ocamlc str.cma invoice.ml -o invoice
 -cmd cd examples/imaginsoft
--cmd ./../../invoice list
--cmd ./../../invoice generate -value 55 -series IMG -rate 9.25
+# -cmd ./../../invoice list
+-cmd ./../../invoice generate -amount 55 -series IMG -nr 66 -rate 9.25 -email cristi.baluta@gmail.com -date 12-dec-2016
