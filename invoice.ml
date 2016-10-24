@@ -23,6 +23,7 @@ let amount = ref 0
 let hours = ref 0
 let email = ref ""
 let series = ref ""
+let date = ref ""
 let nr = ref 0
 let tva = ref 0
 let rate = ref 0.0
@@ -32,6 +33,16 @@ let command_from_string c = match c with
 	| "list" -> List
 	| "help" | _ -> Help
 	
+;;
+let value_for_placeholder placeholder = match placeholder with
+	| "::email::" -> !email
+	| "::contractor_name::" -> placeholder
+	| "::rate::" -> string_of_float !rate
+	| "::amount::" -> string_of_int !amount
+	| "::tva::" -> string_of_int !tva
+	| "::amount_total::" -> string_of_int !amount
+	| "::date::" -> !date
+	| _ -> placeholder
 ;;
 let read_all_lines file_name =
   let in_channel = open_in file_name in
@@ -51,13 +62,14 @@ let placeholders = [
 	"::rate::";
 	"::amount::";
 	"::tva::";
-	"::amount_total::"
+	"::amount_total::";
+	"::date::"
 ]
 let rec iterate_placeholders placeholders lineString = match placeholders with
-	| [] -> print_endline "This is the end of the string list!"
+	| [] -> lineString
 	| placeholder::body -> 
 		begin
-			let new_lineString = Str.global_replace (Str.regexp placeholder) "5667,88" lineString in
+			let new_lineString = Str.global_replace (Str.regexp placeholder) (value_for_placeholder placeholder) lineString in
 			iterate_placeholders body new_lineString
 		end
 ;;
@@ -66,10 +78,7 @@ let rec iterate_placeholders placeholders lineString = match placeholders with
   | e::tl -> Str.global_replace (Str.regexp "::amount::") "5667,88" e
 ;; *)
 let make_replacements s = match s with
-	| ss ->
-		iterate_placeholders placeholders ss
-		(* Str.global_replace (Str.regexp "::title::") "title" ss;
-		Str.global_replace (Str.regexp "::amount::") "5667,88" ss *)
+	| ss -> iterate_placeholders placeholders ss
 ;;
 let rec write_line file_o = function 
   | [] -> ()
@@ -89,6 +98,7 @@ let speclist = [
 	("-nr", Arg.Set_int nr, "Number of invoice");
 	("-rate", Arg.Set_float rate, "Series of invoice");
 	("-exchange-rate", Arg.Set_float exchange_rate, "Series of invoice");
+	("-date", Arg.Set_string date, "Date of invoice");
 ]
 in let usage_msg = "Usage:"
 in Arg.parse speclist (fun anon -> command := command_from_string anon) usage_msg;
@@ -108,7 +118,7 @@ match !command with
 		Array.iter print_endline children;
 	| Help ->
 		print_endline ("Print help");
-print_endline ("Thank you for using invoice cmd!");
+		print_endline ("Thank you for using invoice cmd!");
 
 end
 
