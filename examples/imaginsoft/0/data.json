@@ -1,0 +1,42 @@
+{
+	"client" : {
+		"name" : "S.C. VM &F ADVANCED OUTSOURCING SOFTWARE S.R.L.",
+		"orc" : "J12/3101/2011",
+		"cui" : "RO29465675",
+		"address" : "Cluj-Napoca, str. Cometei, 15",
+		"county" : "Cluj",
+		"bank account" : "RO91INGB0000999902805386",
+		"bank" : "ING BANK"
+	},
+	"contractor" : {
+		"name" : "S.C. IMAGIN SOFT S.R.L.",
+		"orc" : "J12/1286/30.04.2015",
+		"cui" : "34441362",
+		"address" : "Cluj-Napoca, Aleea Detunata, Nr. 11, Bloc A5, Sc. 1, Ap. 72",
+		"county" : "Cluj",
+		"bank account" : "RO37INGB0000999904989343",
+		"bank" : "ING BANK"
+	},
+	"client_delegate" : {
+		"name" : "Banabic Ana-Silvia",
+		"ci_series" : "CJ",
+		"ci_nr" : "60805",
+		"released_by" : "SPLCLEP Cluj"
+	},
+	"contractor_delegate" : {
+		"email" : "cristi.baluta@gmail.com",
+		"phone" : "0722905582",
+		"web" : "imagin.ro"
+	},
+	"series" : "IMG",
+	"nr" : 66,
+	"date" : "12-Jun-2016",
+	"amount" : 7553.00,
+	"amount_total" : 7553.00,
+	"tva" : 0,
+	"bonus" : 0,
+	"hours" : 184,
+	"rate" : 9.25,
+	"exchange_rate" : 4.44,
+	"price_per_unit" : 41.07
+}
