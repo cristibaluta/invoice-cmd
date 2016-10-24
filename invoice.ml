@@ -3,6 +3,11 @@ open Str
 open Printf
 open Arg
 
+type commands = 
+	| Generate
+	| List
+	| Help
+;;
 type company_details = 	
 	| Name of string
     | Orc of string
@@ -12,10 +17,21 @@ type company_details =
 	| BankAccount of string
 	| BankName of string
 ;;
-type commands = 
-	| Generate
-	| List
-	| Help
+type input_data =
+	| InvoiceSeries
+	| InvoiceNr
+	| InvoiceDate
+	| Name
+	| Email
+	| Web
+	| Hours
+	| HourlyRate
+	| ExchangeRate
+	| Amount
+	| Tva
+	| AmountTotal
+	| Client of company_details
+	| Contractor of company_details
 ;;
 
 let command = ref Help
@@ -34,6 +50,16 @@ let command_from_string c = match c with
 	| "help" | _ -> Help
 	
 ;;
+let arg_from_string c = match c with
+	| "::email::" -> Email
+	| "::contractor_name::" -> Contractor.Name
+	| "::rate::" -> HourlyRate
+	| "::amount::" -> Amount
+	| "::tva::" -> Tva
+	| "::amount_total::" -> AmountTotal
+	| "::date::" -> InvoiceDate
+	| _ -> ()
+;;
 let value_for_placeholder placeholder = match placeholder with
 	| "::email::" -> !email
 	| "::contractor_name::" -> placeholder
@@ -44,7 +70,7 @@ let value_for_placeholder placeholder = match placeholder with
 	| "::date::" -> !date
 	| _ -> placeholder
 ;;
-let read_all_lines file_name =
+let read_file file_name =
   let in_channel = open_in file_name in
   let rec read_recursive lines =
     try
@@ -73,18 +99,14 @@ let rec iterate_placeholders placeholders lineString = match placeholders with
 			iterate_placeholders body new_lineString
 		end
 ;;
-(* let rec replace s = function
-  | [] -> ""
-  | e::tl -> Str.global_replace (Str.regexp "::amount::") "5667,88" e
-;; *)
 let make_replacements s = match s with
 	| ss -> iterate_placeholders placeholders ss
 ;;
-let rec write_line file_o = function 
+let rec write_file file_o = function 
   | [] -> ()
   | e::tl -> 
 	  Printf.fprintf file_o "%s\n" (make_replacements e);
-	  write_line file_o tl
+	  write_file file_o tl
 ;;
 
 let main =
@@ -102,14 +124,15 @@ let speclist = [
 ]
 in let usage_msg = "Usage:"
 in Arg.parse speclist (fun anon -> command := command_from_string anon) usage_msg;
+
 match !command with
 	| Generate ->
 		let dir = Sys.getcwd() in
 		let children = Sys.readdir dir in
 		let last_invoice_dir = Array.get children (Array.length children -1) in
-		let template = read_all_lines (dir ^ "/0/template.html") in
+		let template = read_file (dir ^ "/0/template.html") in
 	  	let file_o = open_out (last_invoice_dir ^ "/invoice.html") in
-	  	write_line file_o template;
+	  	write_file file_o template;
 	  	close_out file_o;
 	| List ->
 		print_endline ("List existing invoices");
