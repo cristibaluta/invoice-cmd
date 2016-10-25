@@ -1,3 +1,4 @@
+open Yojson
 open Yojson.Basic.Util
 open Str
 open Printf
@@ -138,6 +139,10 @@ match !command with
 	  	write_file file_o template;
 	  	close_out file_o;
 		print_endline ("Thank you for using invoice cmd!");
+		let json = Yojson.Basic.from_file (dir ^ "/0/data.json") in
+		let open Yojson.Basic.Util in
+	 	let title = json |> member "date" |> to_string in
+	  	print_endline (title)
 		(* (try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
 		Unix_error(err, _, _) -> printf "Install wkhtmltopdf to generate pdfs"); *)
 	| List ->
