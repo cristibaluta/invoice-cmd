@@ -26,8 +26,8 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
 
  2. Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies, but opam will take care of this.
  
- - To install ocaml get it from https://github.com/ocaml/ocaml and follow their instructions.
- - To install opam get it from git at https://github.com/ocaml/opam Then run this commands
+ To install ocaml get it from https://github.com/ocaml/ocaml and follow their instructions.
+ To install opam get it from git at https://github.com/ocaml/opam Then run this commands
  	
 	./configure
 	make
@@ -37,7 +37,7 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
 	opam install yojson
 	opam config env
 
-- Compile the invoice app with:
+Compile the invoice app with:
 	
 	ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson
 	
