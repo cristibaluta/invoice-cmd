@@ -20,16 +20,33 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
 
 ### Installing
 
- 1. Download the executable from build directory then run
+ 1. Download the invoice executable (Mac 64 only) then run
 
 	sudo ./invoice install
 
- 2. Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies.
+ 2. Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies, but opam will take care of this.
+ 
+ - To install ocaml get it from https://github.com/ocaml/ocaml and follow their instructions.
+ - To install opam get it from git at https://github.com/ocaml/opam Then run this commands
  	
-	haxe compile.hxml // Compile and test the app
+	./configure
+	make
+	make install // with sudo if it doesn't work
+	opam init
+	opam config env
+	opam install yojson
+	opam config env
+
+- Compile the invoice app with:
+	
+	ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson
+	
+	// If you have Haxe installed you can use this command to compile and run a sample
+	haxe compile.hxml
+	
 	sudo ./invoice install
 	invoice
 
 ### Dependencies
 
-Invoice cmd can generate html pages that you can open in a browser and print, but if you prefer it can generate pdf with the help of http://wkhtmltopdf.org You just need to install it.
+Invoice cmd can generate html pages that you can open in a browser and then print, but if you prefer it can generate pdf with the help of http://wkhtmltopdf.org You just need to install it.
