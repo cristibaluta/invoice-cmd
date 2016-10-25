@@ -1,4 +1,4 @@
-open Yojson
+open Yojson.Basic
 open Yojson.Basic.Util
 open Str
 open Printf
@@ -110,6 +110,12 @@ let rec write_file file_o = function
 	  Printf.fprintf file_o "%s\n" (make_replacements e);
 	  write_file file_o tl
 ;;
+let generate_pdf_from_html_in_directory dir =
+	let html_o_path = dir ^ "/invoice.html" in
+	let pdf_o_path = dir ^ "/invoice.pdf" in
+	try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
+	Unix_error(err, _, _) -> printf "Pdf not generated, you can install wkhtmltopdf to generate pdfs"
+;;
 
 let main =
 begin
@@ -134,17 +140,18 @@ match !command with
 		let last_invoice_dir = Array.get children (Array.length children -1) in
 		let template = read_file (dir ^ "/0/template.html") in
 		let html_o_path = last_invoice_dir ^ "/invoice.html" in
-		let pdf_o_path = last_invoice_dir ^ "/invoice.pdf" in
 	  	let file_o = open_out html_o_path in
 	  	write_file file_o template;
 	  	close_out file_o;
-		print_endline ("Thank you for using invoice cmd!");
+		
 		let json = Yojson.Basic.from_file (dir ^ "/0/data.json") in
 		let open Yojson.Basic.Util in
-	 	let title = json |> member "date" |> to_string in
-	  	print_endline (title)
-		(* (try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
-		Unix_error(err, _, _) -> printf "Install wkhtmltopdf to generate pdfs"); *)
+	 	let date = json |> member "date" |> to_string in
+	 	let series = json |> member "series" |> to_string in
+	  	print_endline (date ^ series);
+		
+		(* (generate_pdf_from_html_in_directory last_invoice_dir) *)
+		print_endline ("Thank you for generating the invoice from command line, you're on a good track for mastering the cmd!")
 	| List ->
 		print_endline ("List existing invoices");
 		let dir = Sys.getcwd() in
