@@ -36,21 +36,25 @@ type company_details =
 	| Contractor of company_details
 ;; *)
 
-let command = ref Help
-let amount = ref 0
-let hours = ref 0
+(* Json values. If they are specified in the cmd args, those ones have priority *)
 let email = ref ""
-let series = ref ""
-let date = ref ""
-let nr = ref 0
-let tva = ref 0
-let rate = ref 0.0
+let invoice_date = ref ""
+let invoice_series = ref ""
+let invoice_nr = ref 0
+
+let hourly_rate = ref 0.0
+let hours = ref 0.0
 let exchange_rate = ref 0.0
+let amount = ref 0
+
+let tva = ref 0
+let amount_total = ref 0
+
+let command = ref Help
 let command_from_string c = match c with
 	| "generate" -> Generate
 	| "list" -> List
 	| "help" | _ -> Help
-	
 ;;
 (* let arg_from_string c = match c with
 	| "::email::" -> Email
@@ -65,11 +69,11 @@ let command_from_string c = match c with
 let value_for_placeholder placeholder = match placeholder with
 	| "::email::" -> !email
 	| "::contractor_name::" -> placeholder
-	| "::rate::" -> string_of_float !rate
+	| "::rate::" -> string_of_float !hourly_rate
 	| "::amount::" -> string_of_int !amount
 	| "::tva::" -> string_of_int !tva
-	| "::amount_total::" -> string_of_int !amount
-	| "::date::" -> !date
+	| "::amount_total::" -> string_of_int !amount_total
+	| "::date::" -> !invoice_date
 	| _ -> placeholder
 ;;
 let read_file file_name =
@@ -122,13 +126,13 @@ begin
 let speclist = [
 	("-amount", Arg.Set_int amount, "Amount to be paid");
 	("-tva", Arg.Set_int tva, "TVA");
-	("-hours", Arg.Set_int hours, "Amount of worked hours");
+	("-hours", Arg.Set_float hours, "Amount of worked hours");
 	("-email", Arg.Set_string email, "Email to be replaced in ::email::");
-	("-series", Arg.Set_string series, "Series of invoice");
-	("-nr", Arg.Set_int nr, "Number of invoice");
-	("-rate", Arg.Set_float rate, "Series of invoice");
+	("-series", Arg.Set_string invoice_series, "Series of invoice");
+	("-nr", Arg.Set_int invoice_nr, "Number of invoice");
+	("-rate", Arg.Set_float hourly_rate, "Series of invoice");
 	("-exchange-rate", Arg.Set_float exchange_rate, "Series of invoice");
-	("-date", Arg.Set_string date, "Date of invoice");
+	("-date", Arg.Set_string invoice_date, "Date of invoice");
 ]
 in let usage_msg = "Usage:"
 in Arg.parse speclist (fun anon -> command := command_from_string anon) usage_msg;
@@ -149,6 +153,11 @@ match !command with
 	 	let date = json |> member "date" |> to_string in
 	 	let series = json |> member "series" |> to_string in
 	  	print_endline (date ^ series);
+		
+		(* Write json *)
+		let json_o_path = last_invoice_dir ^ "/data.json" in
+		let (person : Yojson.Basic.json) = `Assoc [ ("invoice_series", `String !invoice_series) ] in
+		Yojson.Basic.to_file json_o_path person;
 		
 		(* (generate_pdf_from_html_in_directory last_invoice_dir) *)
 		print_endline ("Thank you for generating the invoice from command line, you're on a good track for mastering the cmd!")
