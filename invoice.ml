@@ -10,7 +10,7 @@ type commands =
 	| List
 	| Help
 ;;
-type company_details = 	
+(* type company_details =
 	| Name of string
     | Orc of string
     | Cui of string
@@ -18,7 +18,7 @@ type company_details =
 	| County of string
 	| BankAccount of string
 	| BankName of string
-;;
+;; *)
 (* type input_data =
 	| InvoiceSeries
 	| InvoiceNr
@@ -38,17 +38,42 @@ type company_details =
 
 (* Json values. If they are specified in the cmd args, those ones have priority *)
 let email = ref ""
+let phone = ref ""
+let web = ref ""
 let invoice_date = ref ""
 let invoice_series = ref ""
 let invoice_nr = ref 0
 
-let hourly_rate = ref 0.0
-let hours = ref 0.0
+let contractor_name = ref ""
+let contractor_orc = ref ""
+let contractor_cui = ref ""
+let contractor_address = ref ""
+let contractor_county = ref ""
+let contractor_bank_account = ref ""
+let contractor_bank_name = ref ""
+let client_name = ref ""
+let client_orc = ref ""
+let client_cui = ref ""
+let client_address = ref ""
+let client_county = ref ""
+let client_bank_account = ref ""
+let client_bank_name = ref ""
+
+let delegate_name = ref ""
+let delegate_ci_series = ref ""
+let delegate_ci_nr = ref ""
+let delegate_ci_released_by = ref ""
+
+let product = ref ""
+let rate = ref 0.0
 let exchange_rate = ref 0.0
-let amount = ref 0
+let units = ref 0.0
+let amount = ref 0.0
+let amount_per_unit = ref 0.0
 
 let tva = ref 0
-let amount_total = ref 0
+let amount_total = ref 0.0
+let currency = ref ""
 
 let command = ref Help
 let command_from_string c = match c with
@@ -56,24 +81,44 @@ let command_from_string c = match c with
 	| "list" -> List
 	| "help" | _ -> Help
 ;;
-(* let arg_from_string c = match c with
-	| "::email::" -> Email
-	| "::contractor_name::" -> Contractor.Name
-	| "::rate::" -> HourlyRate
-	| "::amount::" -> Amount
-	| "::tva::" -> Tva
-	| "::amount_total::" -> AmountTotal
-	| "::date::" -> InvoiceDate
-	| _ -> ()
-;; *)
 let value_for_placeholder placeholder = match placeholder with
 	| "::email::" -> !email
-	| "::contractor_name::" -> placeholder
-	| "::rate::" -> string_of_float !hourly_rate
-	| "::amount::" -> string_of_int !amount
-	| "::tva::" -> string_of_int !tva
-	| "::amount_total::" -> string_of_int !amount_total
+	| "::phone::" -> !phone
+	| "::web::" -> !web
 	| "::date::" -> !invoice_date
+	| "::invoice_series::" -> !invoice_series
+	| "::invoice_nr::" -> string_of_int !invoice_nr
+	
+	| "::contractor_name::" -> !contractor_name
+	| "::contractor_orc::" -> !contractor_orc
+	| "::contractor_cui::" -> !contractor_cui
+	| "::contractor_address::" -> !contractor_address
+	| "::contractor_county::" -> !contractor_county
+	| "::contractor_bank_account::" -> !contractor_bank_account
+	| "::contractor_bank_name::" -> !contractor_bank_name
+	| "::client_name::" -> !client_name
+	| "::client_orc::" -> !client_orc
+	| "::client_cui::" -> !client_cui
+	| "::client_address::" -> !client_address
+	| "::client_county::" -> !client_county
+	| "::client_bank_account::" -> !client_bank_account
+	| "::client_bank_name::" -> !client_bank_name
+
+	| "::delegate_name::" -> !delegate_name
+	| "::delegate_ci_series::" -> !delegate_ci_series
+	| "::delegate_ci_nr::" -> !delegate_ci_nr
+	| "::delegate_ci_released_by::" -> !delegate_ci_released_by
+	
+	| "::product::" -> !product
+	| "::rate::" -> string_of_float !rate
+	| "::exchange_rate::" -> string_of_float !exchange_rate
+	| "::units::" -> string_of_float !units
+	| "::amount::" -> string_of_float !amount
+	| "::amount_per_unit::" -> string_of_float !amount_per_unit
+
+	| "::tva::" -> string_of_int !tva
+	| "::amount_total::" -> string_of_float !amount_total
+	| "::currency::" -> !currency
 	| _ -> placeholder
 ;;
 let read_file file_name =
@@ -88,14 +133,12 @@ let read_file file_name =
   let _ = close_in_noerr in_channel in
   List.rev (lines)
 ;;
-let placeholders = [
-	"::email::";
-	"::contractor_name::";
-	"::rate::";
-	"::amount::";
-	"::tva::";
-	"::amount_total::";
-	"::date::"
+let placeholders = ["::email::"; "::phone::"; "::web::"; "::date::"; "::invoice_series::"; "::invoice_nr::";
+	"::contractor_name::"; "::contractor_orc::"; "::contractor_cui::"; "::contractor_address::"; "::contractor_county::"; "::contractor_bank_account::"; "::contractor_bank_name::";
+	"::client_name::"; "::client_orc::"; "::client_cui::"; "::client_address::"; "::client_county::"; "::client_bank_account::"; "::client_bank_name::";
+	"::delegate_name::"; "::delegate_ci_series::"; "::delegate_ci_nr::"; "::delegate_ci_released_by::";
+	"::product::"; "::rate::"; "::exchange_rate::"; "::units::"; "::amount::"; "::amount_per_unit::";
+	"::tva::"; "::amount_total::"; "::currency::"
 ]
 let rec iterate_placeholders placeholders lineString = match placeholders with
 	| [] -> lineString
@@ -107,6 +150,10 @@ let rec iterate_placeholders placeholders lineString = match placeholders with
 ;;
 let make_replacements s = match s with
 	| ss -> iterate_placeholders placeholders ss
+;;
+let generate_json path =
+	let (person : Yojson.Basic.json) = `Assoc [ ("invoice_series", `String !invoice_series) ] in
+	Yojson.Basic.to_file path person
 ;;
 let rec write_file file_o = function 
   | [] -> ()
@@ -124,13 +171,13 @@ let generate_pdf_from_html_in_directory dir =
 let main =
 begin
 let speclist = [
-	("-amount", Arg.Set_int amount, "Amount to be paid");
+	("-amount", Arg.Set_float amount, "Amount to be paid");
 	("-tva", Arg.Set_int tva, "TVA");
-	("-hours", Arg.Set_float hours, "Amount of worked hours");
 	("-email", Arg.Set_string email, "Email to be replaced in ::email::");
 	("-series", Arg.Set_string invoice_series, "Series of invoice");
 	("-nr", Arg.Set_int invoice_nr, "Number of invoice");
-	("-rate", Arg.Set_float hourly_rate, "Series of invoice");
+	("-rate", Arg.Set_float rate, "Series of invoice");
+	("-units", Arg.Set_float units, "Amount of worked hours");
 	("-exchange-rate", Arg.Set_float exchange_rate, "Series of invoice");
 	("-date", Arg.Set_string invoice_date, "Date of invoice");
 ]
@@ -150,14 +197,18 @@ match !command with
 		
 		let json = Yojson.Basic.from_file (dir ^ "/0/data.json") in
 		let open Yojson.Basic.Util in
-	 	let date = json |> member "date" |> to_string in
-	 	let series = json |> member "series" |> to_string in
-	  	print_endline (date ^ series);
-		
+	 	let _invoice_date = json |> member "invoice_date" |> to_string in
+	 	let _invoice_series = json |> member "invoice_series" |> to_string in
+	 	let _invoice_nr = json |> member "invoice_nr" |> to_int in
+		print_endline (_invoice_date);
+		invoice_date := _invoice_date;
+		invoice_series := _invoice_series;
+		invoice_nr := _invoice_nr + 1;
+		(* amount_total := !amount *. !tva /. 100 *)
+	  	
 		(* Write json *)
 		let json_o_path = last_invoice_dir ^ "/data.json" in
-		let (person : Yojson.Basic.json) = `Assoc [ ("invoice_series", `String !invoice_series) ] in
-		Yojson.Basic.to_file json_o_path person;
+		generate_json json_o_path;
 		
 		(* (generate_pdf_from_html_in_directory last_invoice_dir) *)
 		print_endline ("Thank you for generating the invoice from command line, you're on a good track for mastering the cmd!")

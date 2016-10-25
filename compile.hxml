@@ -1,3 +1,4 @@
+-cmd clear
 -cmd ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson -linkpkg
 -cmd cd examples/imaginsoft
 # -cmd ./../../invoice list
