@@ -32,6 +32,7 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
 	./configure
 	make
 	make install // with sudo if it doesn't work
+	
 	opam init
 	opam config env
 	opam install yojson
