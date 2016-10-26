@@ -71,7 +71,7 @@ let units = ref 0.0
 let amount = ref 0.0
 let amount_per_unit = ref 0.0
 
-let tva = ref 0
+let tva = ref 0.0
 let amount_total = ref 0.0
 let currency = ref ""
 
@@ -116,7 +116,7 @@ let value_for_placeholder placeholder = match placeholder with
 	| "::amount::" -> string_of_float !amount
 	| "::amount_per_unit::" -> string_of_float !amount_per_unit
 
-	| "::tva::" -> string_of_int !tva
+	| "::tva::" -> string_of_float !tva
 	| "::amount_total::" -> string_of_float !amount_total
 	| "::currency::" -> !currency
 	| _ -> placeholder
@@ -151,6 +151,36 @@ let rec iterate_placeholders placeholders lineString = match placeholders with
 let make_replacements s = match s with
 	| ss -> iterate_placeholders placeholders ss
 ;;
+let open_and_parse_json path =
+	let json = Yojson.Basic.from_file path in
+	let open Yojson.Basic.Util in
+ 	let _invoice_date = json |> member "invoice_date" |> to_string in
+ 	let _invoice_series = json |> member "invoice_series" |> to_string in
+ 	let _invoice_nr = json |> member "invoice_nr" |> to_int in
+ 	let _currency = json |> member "currency" |> to_string in
+ 	let _tva = json |> member "tva" |> to_float in
+	let _client_json = json |> member "client" |> to_assoc in
+	let _contractor_json = json |> member "contractor" |> to_assoc in
+	let _client_delegate_json = json |> member "client_delegate" |> to_assoc in
+	let _contractor_delegate_json = json |> member "contractor_delegate" |> to_assoc in
+	let _products = json |> member "products" |> to_list in
+	(* print_endline (_contractor_delegate_json |> member "email" _contractor_delegate_json |> to_string); *)
+	List.iter (fun str -> print_endline (member "name" str |> to_string)) _products;
+	
+	(match _client_json with
+	  | [] -> []  (* or   failwith "empty"  *)
+	  | ab::ris -> printf "Products: %s\n" (member "name" ab |> to_string)
+	);
+	
+	invoice_date := _invoice_date;
+	invoice_series := _invoice_series;
+	currency := _currency;
+	tva := _tva;
+	
+	(* Do some calculations for the changing fields *)
+	invoice_nr := _invoice_nr + 1;
+	amount_total := !amount +. !amount *. !tva /. 100.0
+;;
 let generate_json path =
 	let (person : Yojson.Basic.json) = `Assoc [ ("invoice_series", `String !invoice_series) ] in
 	Yojson.Basic.to_file path person
@@ -172,7 +202,7 @@ let main =
 begin
 let speclist = [
 	("-amount", Arg.Set_float amount, "Amount to be paid");
-	("-tva", Arg.Set_int tva, "TVA");
+	("-tva", Arg.Set_float tva, "TVA");
 	("-email", Arg.Set_string email, "Email to be replaced in ::email::");
 	("-series", Arg.Set_string invoice_series, "Series of invoice");
 	("-nr", Arg.Set_int invoice_nr, "Number of invoice");
@@ -190,28 +220,21 @@ match !command with
 		let children = Sys.readdir dir in
 		let last_invoice_dir = Array.get children (Array.length children -1) in
 		let template = read_file (dir ^ "/0/template.html") in
+		let json_i_path = dir ^ "/0/data.json" in
+		open_and_parse_json json_i_path;
+		
+		(* Write new json *)
+		let json_o_path = last_invoice_dir ^ "/data.json" in
+		generate_json json_o_path;
+		
+		(* Write html *)
 		let html_o_path = last_invoice_dir ^ "/invoice.html" in
 	  	let file_o = open_out html_o_path in
 	  	write_file file_o template;
 	  	close_out file_o;
 		
-		let json = Yojson.Basic.from_file (dir ^ "/0/data.json") in
-		let open Yojson.Basic.Util in
-	 	let _invoice_date = json |> member "invoice_date" |> to_string in
-	 	let _invoice_series = json |> member "invoice_series" |> to_string in
-	 	let _invoice_nr = json |> member "invoice_nr" |> to_int in
-		print_endline (_invoice_date);
-		invoice_date := _invoice_date;
-		invoice_series := _invoice_series;
-		invoice_nr := _invoice_nr + 1;
-		(* amount_total := !amount *. !tva /. 100 *)
-	  	
-		(* Write json *)
-		let json_o_path = last_invoice_dir ^ "/data.json" in
-		generate_json json_o_path;
-		
 		(* (generate_pdf_from_html_in_directory last_invoice_dir) *)
-		print_endline ("Thank you for generating the invoice from command line, you're on a good track for mastering the cmd!")
+		print_endline ("Thank you for generating the invoice from command line!")
 	| List ->
 		print_endline ("List existing invoices");
 		let dir = Sys.getcwd() in

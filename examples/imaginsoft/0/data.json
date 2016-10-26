@@ -43,5 +43,5 @@
 	"invoice_date" : "12-Jun-2016",
 	"amount_total" : 7553.00,
 	"currency" : "RON",
-	"tva" : 0
+	"tva" : 16.0
 }
