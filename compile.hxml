@@ -1,5 +1,5 @@
 -cmd clear
 -cmd ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson -linkpkg
--cmd cd examples/imaginsoft
+-cmd cd examples/company1
 # -cmd ./../../invoice list
--cmd ./../../invoice generate -amount 5565 -series IMG -nr 66 -rate 9.25 -email cristi.baluta@gmail.com -date 12-dec-2016
+-cmd ./../../invoice generate -amount 1000 -series ABC -nr 1 -rate 1.25 -email my.email@gmail.com -date 12-dec-2016

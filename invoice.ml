@@ -218,8 +218,8 @@ let rec write_file file_o = function
 let generate_pdf_from_html_in_directory dir =
 	let html_o_path = dir ^ "/invoice.html" in
 	let pdf_o_path = dir ^ "/invoice.pdf" in
-	try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
-	Unix_error(err, _, _) -> printf "Pdf not generated, you can install wkhtmltopdf to generate pdfs"
+	try (Unix.execvp "_wkhtmltopdf" [| "_wkhtmltopdf"; html_o_path; pdf_o_path |]) with
+	Unix_error(err, _, _) -> printf "Pdf not generated, you can install wkhtmltopdf to generate pdfs\n"
 ;;
 
 let main =
@@ -254,16 +254,20 @@ match !command with
 		open_and_parse_json json_i_path;
 		
 		(* Write new json *)
-		let json_o_path = last_invoice_dir ^ "/data.json" in
+		let new_invoice_dir = !invoice_date in
+		if not (Sys.file_exists new_invoice_dir) then
+			Unix.mkdir new_invoice_dir 0o755;
+		let json_o_path = new_invoice_dir ^ "/data.json" in
 		generate_json json_o_path;
 		
 		(* Write html *)
-		let html_o_path = last_invoice_dir ^ "/invoice.html" in
+		let html_o_path = new_invoice_dir ^ "/invoice.html" in
 	  	let file_o = open_out html_o_path in
 	  	write_file file_o template;
 	  	close_out file_o;
+		printf "Html generated\n";
 		
-		(* (generate_pdf_from_html_in_directory last_invoice_dir) *)
+		generate_pdf_from_html_in_directory last_invoice_dir;
 		print_endline ("Thank you for generating the invoice from command line!")
 	| List ->
 		print_endline ("List existing invoices");
