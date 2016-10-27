@@ -10,31 +10,6 @@ type commands =
 	| List
 	| Help
 ;;
-(* type company_details =
-	| Name of string
-    | Orc of string
-    | Cui of string
-	| Address of string
-	| County of string
-	| BankAccount of string
-	| BankName of string
-;; *)
-(* type input_data =
-	| InvoiceSeries
-	| InvoiceNr
-	| InvoiceDate
-	| Name
-	| Email
-	| Web
-	| Hours
-	| HourlyRate
-	| ExchangeRate
-	| Amount
-	| Tva
-	| AmountTotal
-	| Client of company_details
-	| Contractor of company_details
-;; *)
 
 (* Json values. If they are specified in the cmd args, those ones have priority *)
 let email = ref ""
@@ -75,17 +50,11 @@ let tva = ref 0.0
 let amount_total = ref 0.0
 let currency = ref ""
 
-let command = ref Help
-let command_from_string c = match c with
-	| "generate" -> Generate
-	| "list" -> List
-	| "help" | _ -> Help
-;;
 let value_for_placeholder placeholder = match placeholder with
 	| "::email::" -> !email
 	| "::phone::" -> !phone
 	| "::web::" -> !web
-	| "::date::" -> !invoice_date
+	| "::invoice_date::" -> !invoice_date
 	| "::invoice_series::" -> !invoice_series
 	| "::invoice_nr::" -> string_of_int !invoice_nr
 	
@@ -110,14 +79,14 @@ let value_for_placeholder placeholder = match placeholder with
 	| "::delegate_ci_released_by::" -> !delegate_ci_released_by
 	
 	| "::product::" -> !product
-	| "::rate::" -> string_of_float !rate
-	| "::exchange_rate::" -> string_of_float !exchange_rate
-	| "::units::" -> string_of_float !units
-	| "::amount::" -> string_of_float !amount
-	| "::amount_per_unit::" -> string_of_float !amount_per_unit
+	| "::rate::" -> Printf.sprintf "%.2f" !rate
+	| "::exchange_rate::" -> Printf.sprintf "%.2f" !exchange_rate
+	| "::units::" -> Printf.sprintf "%.2f" !units
+	| "::amount::" -> Printf.sprintf "%.2f" !amount
+	| "::amount_per_unit::" -> Printf.sprintf "%.2f" !amount_per_unit
 
-	| "::tva::" -> string_of_float !tva
-	| "::amount_total::" -> string_of_float !amount_total
+	| "::tva::" -> Printf.sprintf "%.2f" !tva
+	| "::amount_total::" -> Printf.sprintf "%.2f" !amount_total
 	| "::currency::" -> !currency
 	| _ -> placeholder
 ;;
@@ -133,7 +102,7 @@ let read_file file_name =
   let _ = close_in_noerr in_channel in
   List.rev (lines)
 ;;
-let placeholders = ["::email::"; "::phone::"; "::web::"; "::date::"; "::invoice_series::"; "::invoice_nr::";
+let placeholders = ["::email::"; "::phone::"; "::web::"; "::invoice_date::"; "::invoice_series::"; "::invoice_nr::";
 	"::contractor_name::"; "::contractor_orc::"; "::contractor_cui::"; "::contractor_address::"; "::contractor_county::"; "::contractor_bank_account::"; "::contractor_bank_name::";
 	"::client_name::"; "::client_orc::"; "::client_cui::"; "::client_address::"; "::client_county::"; "::client_bank_account::"; "::client_bank_name::";
 	"::delegate_name::"; "::delegate_ci_series::"; "::delegate_ci_nr::"; "::delegate_ci_released_by::";
@@ -154,31 +123,86 @@ let make_replacements s = match s with
 let open_and_parse_json path =
 	let json = Yojson.Basic.from_file path in
 	let open Yojson.Basic.Util in
+ 	let _email = json |> member "email" |> to_string in
+ 	let _phone = json |> member "phone" |> to_string in
+ 	let _web = json |> member "web" |> to_string in
  	let _invoice_date = json |> member "invoice_date" |> to_string in
  	let _invoice_series = json |> member "invoice_series" |> to_string in
  	let _invoice_nr = json |> member "invoice_nr" |> to_int in
- 	let _currency = json |> member "currency" |> to_string in
+
+ 	let _contractor_name = json |> member "contractor_name" |> to_string in
+ 	let _contractor_orc = json |> member "contractor_orc" |> to_string in
+ 	let _contractor_cui = json |> member "contractor_cui" |> to_string in
+ 	let _contractor_address = json |> member "contractor_address" |> to_string in
+ 	let _contractor_county = json |> member "contractor_county" |> to_string in
+ 	let _contractor_bank_account = json |> member "contractor_bank_account" |> to_string in
+ 	let _contractor_bank_name = json |> member "contractor_bank_name" |> to_string in
+ 	let _client_name = json |> member "client_name" |> to_string in
+ 	let _client_orc = json |> member "client_orc" |> to_string in
+ 	let _client_cui = json |> member "client_cui" |> to_string in
+ 	let _client_address = json |> member "client_address" |> to_string in
+ 	let _client_county = json |> member "client_county" |> to_string in
+ 	let _client_bank_account = json |> member "client_bank_account" |> to_string in
+ 	let _client_bank_name = json |> member "client_bank_name" |> to_string in
+
+ 	let _delegate_name = json |> member "delegate_name" |> to_string in
+ 	let _delegate_ci_series = json |> member "delegate_ci_series" |> to_string in
+ 	let _delegate_ci_nr = json |> member "delegate_ci_nr" |> to_string in
+ 	let _delegate_ci_released_by = json |> member "delegate_ci_released_by" |> to_string in
+
+ 	let _product = json |> member "product" |> to_string in
+ 	let _rate = json |> member "rate" |> to_float in
+ 	let _exchange_rate = json |> member "exchange_rate" |> to_float in
+ 	let _units = json |> member "units" |> to_float in
+ 	let _amount = json |> member "amount" |> to_float in
+ 	let _amount_per_unit = json |> member "amount_per_unit" |> to_float in
+
  	let _tva = json |> member "tva" |> to_float in
-	let _client_json = json |> member "client" |> to_assoc in
-	let _contractor_json = json |> member "contractor" |> to_assoc in
-	let _client_delegate_json = json |> member "client_delegate" |> to_assoc in
-	let _contractor_delegate_json = json |> member "contractor_delegate" |> to_assoc in
-	let _products = json |> member "products" |> to_list in
-	(* print_endline (_contractor_delegate_json |> member "email" _contractor_delegate_json |> to_string); *)
-	List.iter (fun str -> print_endline (member "name" str |> to_string)) _products;
+ 	let _amount_total = json |> member "amount_total" |> to_float in
+ 	let _currency = json |> member "currency" |> to_string in
+	();
 	
-	(match _client_json with
-	  | [] -> []  (* or   failwith "empty"  *)
-	  | ab::ris -> printf "Products: %s\n" (member "name" ab |> to_string)
-	);
-	
-	invoice_date := _invoice_date;
+	email := _email;
+	phone := _phone;
+	web := _web;
+	invoice_date := if !invoice_date == "" then _invoice_date else !invoice_date;
 	invoice_series := _invoice_series;
-	currency := _currency;
+	invoice_nr := _invoice_nr;
+
+	contractor_name := _contractor_name;
+	contractor_orc := _contractor_orc;
+	contractor_cui := _contractor_cui;
+	contractor_address := _contractor_address;
+	contractor_county := _contractor_county;
+	contractor_bank_account := _contractor_bank_account;
+	contractor_bank_name := _contractor_bank_name;
+	client_name := _client_name;
+	client_orc := _client_orc;
+	client_cui := _client_cui;
+	client_address := _client_address;
+	client_county := _client_county;
+	client_bank_account := _client_bank_account;
+	client_bank_name := _client_bank_name;
+
+	delegate_name := _delegate_name;
+	delegate_ci_series := _delegate_ci_series;
+	delegate_ci_nr := _delegate_ci_nr;
+	delegate_ci_released_by := _delegate_ci_released_by;
+
+	product := _product;
+	rate := _rate;
+	exchange_rate := _exchange_rate;
+	units := _units;
+	amount := _amount;
+	amount_per_unit := _amount_per_unit;
+
 	tva := _tva;
+	amount_total := _amount_total;
+	currency := _currency;
 	
 	(* Do some calculations for the changing fields *)
 	invoice_nr := _invoice_nr + 1;
+	amount_per_unit := !rate *. !exchange_rate;
 	amount_total := !amount +. !amount *. !tva /. 100.0
 ;;
 let generate_json path =
@@ -210,9 +234,15 @@ let speclist = [
 	("-units", Arg.Set_float units, "Amount of worked hours");
 	("-exchange-rate", Arg.Set_float exchange_rate, "Series of invoice");
 	("-date", Arg.Set_string invoice_date, "Date of invoice");
-]
-in let usage_msg = "Usage:"
-in Arg.parse speclist (fun anon -> command := command_from_string anon) usage_msg;
+] in
+let usage_msg = "Usage:" in
+let command = ref Help in
+let command_from_string c = (match c with
+	| "generate" -> Generate
+	| "list" -> List
+	| "help" | _ -> Help)
+in
+Arg.parse speclist (fun anon -> command := command_from_string anon) usage_msg;
 
 match !command with
 	| Generate ->
