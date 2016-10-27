@@ -288,7 +288,7 @@ match !command with
 		let children = Sys.readdir dir in
 		let last_invoice_dir = Array.get children (Array.length children -1) in
 		let template = read_file (dir ^ "/0/template.html") in
-		let json_i_path = dir ^ "/0/data.json" in
+		let json_i_path = dir ^ "/" ^ last_invoice_dir ^ "/data.json" in
 		open_and_parse_json json_i_path;
 		
 		(* Write new json *)
