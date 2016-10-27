@@ -206,7 +206,45 @@ let open_and_parse_json path =
 	amount_total := !amount +. !amount *. !tva /. 100.0
 ;;
 let generate_json path =
-	let (person : Yojson.Basic.json) = `Assoc [ ("invoice_series", `String !invoice_series) ] in
+	let (person : Yojson.Basic.json) = `Assoc [
+		("email", `String !email);
+		("phone", `String !phone);
+		("web", `String !web);
+		("invoice_date", `String !invoice_date);
+		("invoice_series", `String !invoice_series);
+		("invoice_nr", `Int !invoice_nr);
+		
+		("contractor_name", `String !contractor_name);
+		("contractor_orc", `String !contractor_orc);
+		("contractor_cui", `String !contractor_cui);
+		("contractor_address", `String !contractor_address);
+		("contractor_county", `String !contractor_county);
+		("contractor_bank_account", `String !contractor_bank_account);
+		("contractor_bank_name", `String !contractor_bank_name);
+		("client_name", `String !client_name);
+		("client_orc", `String !client_orc);
+		("client_cui", `String !client_cui);
+		("client_address", `String !client_address);
+		("client_county", `String !client_county);
+		("client_bank_account", `String !client_bank_account);
+		("client_bank_name", `String !client_bank_name);
+		
+		("delegate_name", `String !delegate_name);
+		("delegate_ci_series", `String !delegate_ci_series);
+		("delegate_ci_nr", `String !delegate_ci_nr);
+		("delegate_ci_released_by", `String !delegate_ci_released_by);
+		
+		("product", `String !product);
+		("rate", `Float !rate);
+		("exchange_rate", `Float !exchange_rate);
+		("units", `Float !units);
+		("amount", `Float !amount);
+		("amount_per_unit", `Float !amount_per_unit);
+		
+		("tva", `Float !tva);
+		("amount_total", `Float !amount_total);
+		("currency", `String !currency)
+	] in
 	Yojson.Basic.to_file path person
 ;;
 let rec write_file file_o = function 

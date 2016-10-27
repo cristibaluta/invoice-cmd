@@ -22,10 +22,10 @@
 	"contractor_bank_account" : "RO00INGB000000000000000",
 	"contractor_bank_name" : "BANK NAME",
 	
-	"delegate_name" : "Banabic Ana-Silvia",
-	"delegate_ci_series" : "CJ",
-	"delegate_ci_nr" : "60805",
-	"delegate_ci_released_by" : "SPLCLEP Cluj",
+	"delegate_name" : "Delegate Name",
+	"delegate_ci_series" : "AA",
+	"delegate_ci_nr" : "00000",
+	"delegate_ci_released_by" : "Released by ...",
 	
 	"product" : "Product or service name",
 	"rate" : 0.0,
