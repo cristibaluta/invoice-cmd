@@ -196,7 +196,9 @@ begin
 		| "help" ->
 			print_endline ("Print help");
 		| "install" ->
-			print_endline ("Print help");
+			print_endline ("Installing to /usr/local/bin/");
+			try (Unix.execvp "mv" [| "mv"; "-i"; "invoice"; "/usr/local/bin/invoice" |]) with
+			Unix_error(err, _, _) -> printf "Can't install, please run with sudo\n";
 		| _ -> ()
 end
 
