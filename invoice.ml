@@ -5,12 +5,6 @@ open Printf
 open Arg
 open Unix
 
-type commands = 
-	| Generate
-	| List
-	| Help
-;;
-
 (* Json values. If they are specified in the cmd args, those ones have priority *)
 let email = ref ""
 let phone = ref ""
@@ -274,16 +268,11 @@ let speclist = [
 	("-date", Arg.Set_string invoice_date, "Date of invoice");
 ] in
 let usage_msg = "Usage:" in
-let command = ref Help in
-let command_from_string c = (match c with
-	| "generate" -> Generate
-	| "list" -> List
-	| "help" | _ -> Help)
-in
-Arg.parse speclist (fun anon -> command := command_from_string anon) usage_msg;
+let command = ref "help" in
+Arg.parse speclist (fun anon -> command := anon) usage_msg;
 
 match !command with
-	| Generate ->
+	| "generate" ->
 		let dir = Sys.getcwd() in
 		let children = Sys.readdir dir in
 		let last_invoice_dir = Array.get children (Array.length children -1) in
@@ -307,13 +296,16 @@ match !command with
 		
 		generate_pdf_from_html_in_directory last_invoice_dir;
 		print_endline ("Thank you for generating the invoice from command line!")
-	| List ->
+	| "list" ->
 		print_endline ("List existing invoices");
 		let dir = Sys.getcwd() in
 		let children = Sys.readdir dir in
 		Array.iter print_endline children;
-	| Help ->
+	| "help" ->
 		print_endline ("Print help");
+	| "install" ->
+		print_endline ("Print help");
+	| _ -> ()
 
 end
 
