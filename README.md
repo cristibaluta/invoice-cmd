@@ -29,6 +29,7 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
  To install ocaml get it from https://github.com/ocaml/ocaml and follow their instructions.
  To install opam get it from git at https://github.com/ocaml/opam Then run this commands
  	
+	
 	./configure
 	make
 	make install // with sudo if it doesn't work
@@ -37,16 +38,21 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
 	opam config env
 	opam install yojson
 	opam config env
+	
 
 Compile the invoice app with:
 	
+	// Quick compile
 	ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson
+	// Compile standalone/shippable app
+	ocamlfind ocamlopt str.cmxa unix.cmxa invoice.ml -o invoice -package yojson -linkpkg
 	
 	// If you have Haxe installed you can use this command to compile and run a sample
 	haxe compile.hxml
 	
 	sudo ./invoice install
 	invoice
+	
 
 ### Dependencies
 

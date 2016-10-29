@@ -109,10 +109,10 @@ let main = begin
 				exit 0
 			end;
 			(* Find last invoice dir *)
-			let dir = Sys.getcwd() in
-			let prev_invoice_dir = find_last_invoice_dir dir !invoice_date in
-			let html_template = load_file (dir ^ "/0/template.html") in
-			let prev_json_path = dir ^ "/" ^ prev_invoice_dir ^ "/data.json" in
+			let cwd = Sys.getcwd() in
+			let prev_invoice_dir = find_last_invoice_dir cwd !invoice_date in
+			let html_template = load_file (cwd ^ "/0/template.html") in
+			let prev_json_path = cwd ^ "/" ^ prev_invoice_dir ^ "/data.json" in
 			(* Open json *)
 			let json = ref (Yojson.Basic.from_file prev_json_path) in
 			let open Yojson.Basic.Util in
@@ -189,8 +189,8 @@ let main = begin
 			print_endline ("Thank you for generating the invoice from command line!")
 		| "list" ->
 			print_endline ("List existing invoices");
-			let dir = Sys.getcwd() in
-			let children = Sys.readdir dir in
+			let cwd = Sys.getcwd() in
+			let children = Sys.readdir cwd in
 			Array.iter print_endline children;
 		| "help" | "" ->
 			Arg.usage man usage
