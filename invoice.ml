@@ -6,7 +6,7 @@ open Arg
 open Unix
 
 let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholder with
-	| "invoice_nr" -> string_of_int (j |> member "invoice_nr" |> to_int)
+	| "invoice_nr" -> Printf.sprintf "%03d" (j |> member placeholder |> to_int)
 	| "rate"
 	| "exchange_rate"
 	| "units"
