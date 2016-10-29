@@ -98,6 +98,10 @@ begin
 	match !command with
 		| "generate" ->
 			
+			if !invoice_date = "" then begin
+				print_endline ("-date is a mandatory field. Run invoice -help for more info!");
+				exit 0
+			end;
 			(* Read json from last invoice dir *)
 			let dir = Sys.getcwd() in
 			let children = Sys.readdir dir in
@@ -109,10 +113,10 @@ begin
 			let open Yojson.Basic.Util in
 		 	let previous_invoice_date = !json |> member "invoice_date" |> to_string in
 		 	let previous_invoice_nr = !json |> member "invoice_nr" |> to_int in
-
 		 	let previous_rate = !json |> member "rate" |> to_float in
-			
-		 	let _tva = !json |> member "tva" |> to_float in
+		 	let previous_tva = !json |> member "tva" |> to_float in
+			let amount_per_unit = ref 0.0 in
+			let amount_total = ref 0.0 in
 			print_endline ("Input data:");
 			if !units <> 0.0 then print_endline ("  units/hours : " ^ (string_of_float !units) );
 			if !amount <> 0.0 then print_endline ("  amount : " ^ (string_of_float !amount) );
@@ -122,18 +126,37 @@ begin
 			if !invoice_date <> "" then print_endline ("  date : " ^ !invoice_date );
 			
 			print_endline ("Calculated data:");
-			if !rate = 0.0 then rate := previous_rate;
+			(* if !rate = 0.0 then rate := previous_rate; *)
 			
-			(* Do some calculations for the changing fields *)
-			invoice_nr := previous_invoice_nr + 1;
-			let amount_per_unit = !rate *. !exchange_rate in
-			let amount_total = !amount +. !amount *. !tva /. 100.0 in
-			if !units = 0.0 then begin
-				units := !amount /. amount_per_unit;
-				print_endline ("  units/hours : " ^ (string_of_float !units) )
+			(* Do some calculations *)
+			if (!exchange_rate <> 0.0 && !units <> 0.0 && !amount <> 0.0) then begin
+				(* When you know the total value, exchange rate, and units *)
+				
+				amount_per_unit := !amount /. !units;
+				rate := !amount_per_unit /. !exchange_rate;
+				print_endline ("  amount_per_unit : " ^ (string_of_float !amount_per_unit) );
+				print_endline ("  rate : " ^ (string_of_float !rate) )
+				
+			end else if (!rate <> 0.0 && !exchange_rate <> 0.0 && !amount <> 0.0) then begin
+				(* When you know the rate, exchange rate, and amount *)
+
+				amount_per_unit := !rate *. !exchange_rate;
+				if !units = 0.0 then begin
+					units := !amount /. !amount_per_unit;
+					print_endline ("  units/hours : " ^ (string_of_float !units) )
+				end;
+				print_endline ("  amount_per_unit : " ^ (string_of_float !amount_per_unit) );
+				
+			end else begin
+				
+				print_endline ("Err: Not enough info to calculate the missing data! Needed data is:");
+				print_endline ("  1) -exchange-rate -units -amount");
+				print_endline ("  2) -rate -exchange-rate -units");
+				exit 0
+				
 			end;
-			
-			print_endline ("  amount_per_unit : " ^ (string_of_float amount_per_unit) );
+			invoice_nr := previous_invoice_nr + 1;
+			amount_total := !amount +. !amount *. !tva /. 100.0;
 			
 			(* Write new json *)
 			let new_invoice_dir = !invoice_date in
@@ -142,8 +165,8 @@ begin
 			let json_o_path = new_invoice_dir ^ "/data.json" in
 			json := update "invoice_nr" (`Int !invoice_nr) !json;
 			json := update "amount" (`Float !amount) !json;
-			json := update "amount_total" (`Float amount_total) !json;
-			json := update "amount_per_unit" (`Float amount_per_unit) !json;
+			json := update "amount_total" (`Float !amount_total) !json;
+			json := update "amount_per_unit" (`Float !amount_per_unit) !json;
 			json := update "invoice_date" (`String "invoice_date") !json;
 			json := update "rate" (`Float !rate) !json;
 			json := update "exchange_rate" (`Float !exchange_rate) !json;

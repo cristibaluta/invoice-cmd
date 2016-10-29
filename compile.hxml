@@ -1,5 +1,8 @@
 -cmd clear
 -cmd ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson -linkpkg
 -cmd cd examples/company1
-# -cmd ./../../invoice list
--cmd ./../../invoice generate -amount 1000.5 -hours 120 -rate 1.25 -exchange-rate 4.44 -date 2016.10.14
+
+# Generate invoice knowing the total amount, units and exchange rate
+-cmd ./../../invoice generate -amount 980.5 -hours 120 -exchange-rate 4.44 -date 2016.10.14
+
+# -cmd ocamlfind ocamlopt str.cmxa unix.cmxa invoice.ml -o invoice -package yojson -linkpkg
