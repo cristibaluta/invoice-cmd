@@ -27,7 +27,7 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
 
 ### Installing
 
-[b]Option 1:[/b] Download the invoice executable (Mac 64 only) then run this to make it available from anywhere:
+Option 1: Download the invoice executable (Mac 64 only) then run this to make it available from anywhere:
 
 	sudo ./invoice install
 
