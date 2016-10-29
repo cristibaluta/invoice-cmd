@@ -5,44 +5,14 @@ open Printf
 open Arg
 open Unix
 
-(* Json values. If they are specified in the cmd args, those ones have priority *)
-let email = ref ""
-let phone = ref ""
-let web = ref ""
-let invoice_date = ref ""
-let invoice_series = ref ""
+(* Input vars *)
 let invoice_nr = ref 0
-
-let contractor_name = ref ""
-let contractor_orc = ref ""
-let contractor_cui = ref ""
-let contractor_address = ref ""
-let contractor_county = ref ""
-let contractor_bank_account = ref ""
-let contractor_bank_name = ref ""
-let client_name = ref ""
-let client_orc = ref ""
-let client_cui = ref ""
-let client_address = ref ""
-let client_county = ref ""
-let client_bank_account = ref ""
-let client_bank_name = ref ""
-
-let delegate_name = ref ""
-let delegate_ci_series = ref ""
-let delegate_ci_nr = ref ""
-let delegate_ci_released_by = ref ""
-
-let product = ref ""
 let rate = ref 0.0
 let exchange_rate = ref 0.0
 let units = ref 0.0
 let amount = ref 0.0
-let amount_per_unit = ref 0.0
-
 let tva = ref 0.0
-let amount_total = ref 0.0
-let currency = ref ""
+let invoice_date = ref ""
 
 let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholder with
 	| "invoice_nr" -> string_of_int (j |> member "invoice_nr" |> to_int)
@@ -112,21 +82,18 @@ let generate_pdf_from_html_in_directory dir =
 let main =
 begin
 	(* Read the user input *)
-	let usage = "invoice-cmd ©2016 Imagin soft\nCommands: \ngenerate Generates a new invoice based on the last invoice and the info from the cmd\nlist - Lists all the invoices dates and amounts\ninstall Run sudo ./invoice install in order to install the app in a proper place" in
+	let usage = "invoice-cmd ©2016 Imagin soft\nUsage : \ninvoice [generate|list|install] [options]\nOptions :" in
 	let man = [
 		("-amount", Arg.Set_float amount, "<float> Amount to be paid");
 		("-tva", Arg.Set_float tva, "<float> VAT");
-		("-email", Arg.Set_string email, "<string> Email to be replaced in ::email::");
-		("-series", Arg.Set_string invoice_series, "<string> Series of the invoice");
-		("-nr", Arg.Set_int invoice_nr, "<int> Number of the invoice. If missing, it will be taken and incremented from last invoice");
 		("-rate", Arg.Set_float rate, "<float> Hourly rate");
 		("-units", Arg.Set_float units, "<float> Amount of worked hours");
+		("-hours", Arg.Set_float units, "<float> Amount of worked hours");
 		("-exchange-rate", Arg.Set_float exchange_rate, "<float> Currency conversion rate");
 		("-date", Arg.Set_string invoice_date, "<year.month.day> Date of invoice, written with numbers");
 	] in
-	let usage_msg = "Usage:" in
 	let command = ref "help" in
-	Arg.parse man (fun anon -> command := anon) usage_msg;
+	Arg.parse man (fun anon -> command := anon) usage;
 
 	match !command with
 		| "generate" ->
@@ -140,26 +107,33 @@ begin
 			(* Open json *)
 			let json = ref (Yojson.Basic.from_file json_i_path) in
 			let open Yojson.Basic.Util in
-		 	let _email = !json |> member "email" |> to_string in
-		 	let _invoice_date = !json |> member "invoice_date" |> to_string in
-		 	let _invoice_series = !json |> member "invoice_series" |> to_string in
-		 	let _invoice_nr = !json |> member "invoice_nr" |> to_int in
+		 	let previous_invoice_date = !json |> member "invoice_date" |> to_string in
+		 	let previous_invoice_nr = !json |> member "invoice_nr" |> to_int in
 
-		 	let _product = !json |> member "product" |> to_string in
-		 	let _rate = !json |> member "rate" |> to_float in
-		 	let _exchange_rate = !json |> member "exchange_rate" |> to_float in
-		 	let _units = !json |> member "units" |> to_float in
-		 	let _amount = !json |> member "amount" |> to_float in
-		 	let _amount_per_unit = !json |> member "amount_per_unit" |> to_float in
-
+		 	let previous_rate = !json |> member "rate" |> to_float in
+			
 		 	let _tva = !json |> member "tva" |> to_float in
-		 	let _amount_total = !json |> member "amount_total" |> to_float in
-		 	let _currency = !json |> member "currency" |> to_string in
+			print_endline ("Input data:");
+			if !units <> 0.0 then print_endline ("  units/hours : " ^ (string_of_float !units) );
+			if !amount <> 0.0 then print_endline ("  amount : " ^ (string_of_float !amount) );
+			if !tva <> 0.0 then print_endline ("  tva : " ^ (string_of_float !tva) );
+			if !rate <> 0.0 then print_endline ("  rate : " ^ (string_of_float !rate) );
+			if !exchange_rate <> 0.0 then print_endline ("  exchange_rate : " ^ (string_of_float !exchange_rate) );
+			if !invoice_date <> "" then print_endline ("  date : " ^ !invoice_date );
+			
+			print_endline ("Calculated data:");
+			if !rate = 0.0 then rate := previous_rate;
 			
 			(* Do some calculations for the changing fields *)
-			invoice_nr := _invoice_nr + 1;
-			amount_per_unit := !rate *. !exchange_rate;
-			amount_total := !amount +. !amount *. !tva /. 100.0;
+			invoice_nr := previous_invoice_nr + 1;
+			let amount_per_unit = !rate *. !exchange_rate in
+			let amount_total = !amount +. !amount *. !tva /. 100.0 in
+			if !units = 0.0 then begin
+				units := !amount /. amount_per_unit;
+				print_endline ("  units/hours : " ^ (string_of_float !units) )
+			end;
+			
+			print_endline ("  amount_per_unit : " ^ (string_of_float amount_per_unit) );
 			
 			(* Write new json *)
 			let new_invoice_dir = !invoice_date in
@@ -168,8 +142,8 @@ begin
 			let json_o_path = new_invoice_dir ^ "/data.json" in
 			json := update "invoice_nr" (`Int !invoice_nr) !json;
 			json := update "amount" (`Float !amount) !json;
-			json := update "amount_total" (`Float !amount_total) !json;
-			json := update "amount_per_unit" (`Float !amount_per_unit) !json;
+			json := update "amount_total" (`Float amount_total) !json;
+			json := update "amount_per_unit" (`Float amount_per_unit) !json;
 			json := update "invoice_date" (`String "invoice_date") !json;
 			json := update "rate" (`Float !rate) !json;
 			json := update "exchange_rate" (`Float !exchange_rate) !json;
@@ -191,7 +165,6 @@ begin
 			let children = Sys.readdir dir in
 			Array.iter print_endline children;
 		| "help" | "" ->
-			print_endline ("Print help");
 			Arg.usage man usage
 		| "install" ->
 			print_endline ("Installing to /usr/local/bin/");
