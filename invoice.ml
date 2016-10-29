@@ -45,19 +45,14 @@ let amount_total = ref 0.0
 let currency = ref ""
 
 let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholder with
-	(* Ints and floats need special parsing *)
 	| "invoice_nr" -> string_of_int (j |> member "invoice_nr" |> to_int)
-	
-	| "rate" -> Printf.sprintf "%.2f" !rate
-	| "exchange_rate" -> Printf.sprintf "%.2f" !exchange_rate
-	| "units" -> Printf.sprintf "%.2f" !units
-	| "amount" -> Printf.sprintf "%.2f" !amount
-	| "amount_per_unit" -> Printf.sprintf "%.2f" !amount_per_unit
-
-	| "tva" -> Printf.sprintf "%.2f" !tva
-	| "amount_total" -> Printf.sprintf "%.2f" !amount_total
-	
-	(* But strings can be automated *)
+	| "rate"
+	| "exchange_rate"
+	| "units"
+	| "amount"
+	| "amount_per_unit"
+	| "tva"
+	| "amount_total" -> Printf.sprintf "%.2f" (j |> member placeholder |> to_float)
 	| _ -> j |> member placeholder |> to_string
 ;;
 let read_file file_name =
@@ -117,20 +112,21 @@ let generate_pdf_from_html_in_directory dir =
 let main =
 begin
 	(* Read the user input *)
-	let speclist = [
-		("-amount", Arg.Set_float amount, "Amount to be paid");
-		("-tva", Arg.Set_float tva, "TVA");
-		("-email", Arg.Set_string email, "Email to be replaced in ::email::");
-		("-series", Arg.Set_string invoice_series, "Series of invoice");
-		("-nr", Arg.Set_int invoice_nr, "Number of invoice");
-		("-rate", Arg.Set_float rate, "Series of invoice");
-		("-units", Arg.Set_float units, "Amount of worked hours");
-		("-exchange-rate", Arg.Set_float exchange_rate, "Series of invoice");
-		("-date", Arg.Set_string invoice_date, "Date of invoice");
+	let usage = "invoice-cmd ©2016 Imagin soft\nCommands: \ngenerate Generates a new invoice based on the last invoice and the info from the cmd\nlist - Lists all the invoices dates and amounts\ninstall Run sudo ./invoice install in order to install the app in a proper place" in
+	let man = [
+		("-amount", Arg.Set_float amount, "<float> Amount to be paid");
+		("-tva", Arg.Set_float tva, "<float> VAT");
+		("-email", Arg.Set_string email, "<string> Email to be replaced in ::email::");
+		("-series", Arg.Set_string invoice_series, "<string> Series of the invoice");
+		("-nr", Arg.Set_int invoice_nr, "<int> Number of the invoice. If missing, it will be taken and incremented from last invoice");
+		("-rate", Arg.Set_float rate, "<float> Hourly rate");
+		("-units", Arg.Set_float units, "<float> Amount of worked hours");
+		("-exchange-rate", Arg.Set_float exchange_rate, "<float> Currency conversion rate");
+		("-date", Arg.Set_string invoice_date, "<year.month.day> Date of invoice, written with numbers");
 	] in
 	let usage_msg = "Usage:" in
 	let command = ref "help" in
-	Arg.parse speclist (fun anon -> command := anon) usage_msg;
+	Arg.parse man (fun anon -> command := anon) usage_msg;
 
 	match !command with
 		| "generate" ->
@@ -172,6 +168,7 @@ begin
 			let json_o_path = new_invoice_dir ^ "/data.json" in
 			json := update "invoice_nr" (`Int !invoice_nr) !json;
 			json := update "amount" (`Float !amount) !json;
+			json := update "amount_total" (`Float !amount_total) !json;
 			json := update "amount_per_unit" (`Float !amount_per_unit) !json;
 			json := update "invoice_date" (`String "invoice_date") !json;
 			json := update "rate" (`Float !rate) !json;
@@ -193,8 +190,9 @@ begin
 			let dir = Sys.getcwd() in
 			let children = Sys.readdir dir in
 			Array.iter print_endline children;
-		| "help" ->
+		| "help" | "" ->
 			print_endline ("Print help");
+			Arg.usage man usage
 		| "install" ->
 			print_endline ("Installing to /usr/local/bin/");
 			try (Unix.execvp "mv" [| "mv"; "-i"; "invoice"; "/usr/local/bin/invoice" |]) with
