@@ -66,7 +66,7 @@ let rec write_file file_o (j : Yojson.Basic.json) = function
 let generate_pdf_from_html_in_directory dir =
 	let html_o_path = dir ^ "/invoice.html" in
 	let pdf_o_path = dir ^ "/invoice.pdf" in
-	try (Unix.execvp "_wkhtmltopdf" [| "_wkhtmltopdf"; html_o_path; pdf_o_path |]) with
+	try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
 	Unix_error(err, _, _) -> printf "Pdf not generated, you can install wkhtmltopdf to generate pdfs\n"
 ;;
 
@@ -185,7 +185,7 @@ let main = begin
 		  	close_out file_o;
 			printf "Html generated\n";
 
-			generate_pdf_from_html_in_directory prev_invoice_dir;
+			generate_pdf_from_html_in_directory new_invoice_dir;
 			print_endline ("Thank you for generating the invoice from command line!")
 		| "list" ->
 			print_endline ("List existing invoices");
