@@ -3,8 +3,10 @@ Command line app to generate invoices. Data is stored in jsons so it will be eas
 
 This is the html template
 ![Screenshot](https://s13.postimg.org/ndmkhvfyf/Screen_Shot_2016_10_24_at_09_47_46.png)
+
 You run this command with the minum information
 ![Screenshot](https://s15.postimg.org/9sfcggejv/Screen_Shot_2016_10_29_at_21_15_08.png)
+
 And this is your invoice ready to print
 ![Screenshot](https://s12.postimg.org/3p9489pb1/Screen_Shot_2016_10_29_at_21_15_40.png)
 
