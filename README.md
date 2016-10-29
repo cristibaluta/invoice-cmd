@@ -20,11 +20,11 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
 
 ### Installing
 
- 1. Download the invoice executable (Mac 64 only) then run
+- Download the invoice executable (Mac 64 only) then run
 
 	sudo ./invoice install
 
- 2. Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies, but opam will take care of this.
+- Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies, but opam will take care of this.
  
  To install ocaml get it from https://github.com/ocaml/ocaml and follow their instructions.
  To install opam get it from git at https://github.com/ocaml/opam Then run this commands
