@@ -4,7 +4,7 @@ Command line app to generate invoices. Data is stored in jsons so it will be eas
 This is the html template
 ![Screenshot](https://s13.postimg.org/ndmkhvfyf/Screen_Shot_2016_10_24_at_09_47_46.png)
 
-You run this command with the minum information
+You run this command with the minimum information
 ![Screenshot](https://s15.postimg.org/9sfcggejv/Screen_Shot_2016_10_29_at_21_15_08.png)
 
 And this is your invoice ready to print
@@ -27,11 +27,11 @@ Generate a new invoice. Data from the last invoice will be used (and incremented
 
 ### Installing
 
-Download the invoice executable (Mac 64 only) then run
+[b]Option 1:[/b] Download the invoice executable (Mac 64 only) then run this to make it available from anywhere:
 
 	sudo ./invoice install
 
-Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies (but opam will take care of this)
+Option 2: Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies (but opam will take care of this)
  
  To install ocaml get it from https://github.com/ocaml/ocaml and follow their instructions.
  To install opam get it from git at https://github.com/ocaml/opam Then run this commands
