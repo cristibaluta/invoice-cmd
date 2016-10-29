@@ -5,15 +5,6 @@ open Printf
 open Arg
 open Unix
 
-(* Input vars *)
-let invoice_nr = ref 0
-let rate = ref 0.0
-let exchange_rate = ref 0.0
-let units = ref 0.0
-let amount = ref 0.0
-let tva = ref 0.0
-let invoice_date = ref ""
-
 let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholder with
 	| "invoice_nr" -> string_of_int (j |> member "invoice_nr" |> to_int)
 	| "rate"
@@ -25,7 +16,7 @@ let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholde
 	| "amount_total" -> Printf.sprintf "%.2f" (j |> member placeholder |> to_float)
 	| _ -> j |> member placeholder |> to_string
 ;;
-let read_file file_name =
+let load_file file_name =
   let in_channel = open_in file_name in
   let rec read_recursive lines =
     try
@@ -79,8 +70,23 @@ let generate_pdf_from_html_in_directory dir =
 	Unix_error(err, _, _) -> printf "Pdf not generated, you can install wkhtmltopdf to generate pdfs\n"
 ;;
 
-let main =
-begin
+(* Input vars *)
+let invoice_nr = ref 0
+let rate = ref 0.0
+let exchange_rate = ref 0.0
+let units = ref 0.0
+let amount = ref 0.0
+let tva = ref 0.0
+let invoice_date = ref ""
+let find_last_invoice_dir in_dir new_date =
+	let children = Sys.readdir in_dir in
+	let last_date = ref (Array.get children (Array.length children - 1)) in ();
+	if !last_date = new_date then
+		last_date := Array.get children (Array.length children - 2);
+	!last_date
+;;
+
+let main = begin
 	(* Read the user input *)
 	let usage = "invoice-cmd ©2016 Imagin soft\nUsage : \ninvoice [generate|list|install] [options]\nOptions :" in
 	let man = [
@@ -102,14 +108,13 @@ begin
 				print_endline ("-date is a mandatory field. Run invoice -help for more info!");
 				exit 0
 			end;
-			(* Read json from last invoice dir *)
+			(* Find last invoice dir *)
 			let dir = Sys.getcwd() in
-			let children = Sys.readdir dir in
-			let last_invoice_dir = Array.get children (Array.length children -1) in
-			let html_template = read_file (dir ^ "/0/template.html") in
-			let json_i_path = dir ^ "/" ^ last_invoice_dir ^ "/data.json" in
+			let prev_invoice_dir = find_last_invoice_dir dir !invoice_date in
+			let html_template = load_file (dir ^ "/0/template.html") in
+			let prev_json_path = dir ^ "/" ^ prev_invoice_dir ^ "/data.json" in
 			(* Open json *)
-			let json = ref (Yojson.Basic.from_file json_i_path) in
+			let json = ref (Yojson.Basic.from_file prev_json_path) in
 			let open Yojson.Basic.Util in
 		 	let previous_invoice_date = !json |> member "invoice_date" |> to_string in
 		 	let previous_invoice_nr = !json |> member "invoice_nr" |> to_int in
@@ -167,7 +172,7 @@ begin
 			json := update "amount" (`Float !amount) !json;
 			json := update "amount_total" (`Float !amount_total) !json;
 			json := update "amount_per_unit" (`Float !amount_per_unit) !json;
-			json := update "invoice_date" (`String "invoice_date") !json;
+			json := update "invoice_date" (`String !invoice_date) !json;
 			json := update "rate" (`Float !rate) !json;
 			json := update "exchange_rate" (`Float !exchange_rate) !json;
 			json := update "units" (`Float !units) !json;
@@ -180,7 +185,7 @@ begin
 		  	close_out file_o;
 			printf "Html generated\n";
 
-			generate_pdf_from_html_in_directory last_invoice_dir;
+			generate_pdf_from_html_in_directory prev_invoice_dir;
 			print_endline ("Thank you for generating the invoice from command line!")
 		| "list" ->
 			print_endline ("List existing invoices");
