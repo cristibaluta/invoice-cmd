@@ -31,7 +31,7 @@ Option 1: Download the invoice executable (Mac 64 only) then run this to make it
 
 	sudo ./invoice install
 
-Option 2: Download the sources and compile yourself. To compile you need the Ocaml compiler, opam libs manager, and yojson lib with it's dependencies (but opam will take care of this)
+Option 2: Download the sources and compile yourself. To compile you need the Ocaml compiler, Opam libs manager, and Yojson lib with it's dependencies (but opam will take care of this)
  
  To install ocaml get it from https://github.com/ocaml/ocaml and follow their instructions.
  To install opam get it from git at https://github.com/ocaml/opam Then run this commands
@@ -50,16 +50,14 @@ Option 2: Download the sources and compile yourself. To compile you need the Oca
 Compile the invoice app with:
 	
 	// Quick compile
-	ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson
+	ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson -linkpkg
 	// Compile standalone/shippable app
 	ocamlfind ocamlopt str.cmxa unix.cmxa invoice.ml -o invoice -package yojson -linkpkg
 	
-	// If you have Haxe installed you can use this command to compile and run a sample
+
+Optionally, if you have Haxe installed you can use this command to compile and run the sample
+
 	haxe compile.hxml
-	
-	sudo ./invoice install
-	invoice
-	
 
 ### Dependencies
 
@@ -67,5 +65,5 @@ Invoice cmd can generate html pages that you can open in a browser and then prin
 
 ### Contribution
 
- 1) You can help this software grow by submitting invoicing templates as a html (use pull requests for that) or even doc/pdf/screenshot (open an issue for that)
- 2) Need two people willing to make builds for windows and linux from time to time. You need ocaml installed, which is the hardest part.
+- You can help this software grow by submitting invoicing templates as a html (use pull requests for that) or even doc/pdf/screenshot (open an issue for that)
+- Need two people willing to make builds for windows and linux from time to time. You need ocaml installed, which is the hardest part.
