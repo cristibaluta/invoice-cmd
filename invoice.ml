@@ -66,7 +66,7 @@ let rec write_file file_o (j : Yojson.Basic.json) = function
 let generate_pdf_from_html_in_directory dir =
 	let html_o_path = dir ^ "/invoice.html" in
 	let pdf_o_path = dir ^ "/invoice.pdf" in
-	try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
+	try (Unix.execvp "_wkhtmltopdf" [| "_wkhtmltopdf"; html_o_path; pdf_o_path |]) with
 	Unix_error(err, _, _) -> printf "Pdf not generated, you can install wkhtmltopdf to generate pdfs\n"
 ;;
 
@@ -188,16 +188,26 @@ let main = begin
 			generate_pdf_from_html_in_directory new_invoice_dir;
 			print_endline ("Thank you for generating the invoice from command line!")
 		| "list" ->
-			print_endline ("List existing invoices");
+			print_endline ("Existing invoices:");
 			let cwd = Sys.getcwd() in
 			let children = Sys.readdir cwd in
-			Array.iter print_endline children;
+			let list_children = Array.to_list children in
+			let list_invoices = List.filter (fun s -> (Str.string_match (Str.regexp "[0-9]*\\.[0-9]*\\.[0-9]*") s 0)) list_children in
+			List.iter print_endline list_invoices;
 		| "help" | "" ->
 			Arg.usage man usage
 		| "install" ->
-			print_endline ("Installing to /usr/local/bin/");
-			try (Unix.execvp "mv" [| "mv"; "-i"; "invoice"; "/usr/local/bin/invoice" |]) with
-			Unix_error(err, _, _) -> printf "Can't install, please run with sudo\n";
+			let executable_path = (match Sys.os_type with
+				| "Unix" -> "/usr/local/bin/"
+				| "Win32" | "Cygwin" -> "c://program files"
+				| _ -> "") in
+			print_endline ("Installing to " ^ executable_path);
+			try 
+				(Unix.execvp "mv" [| "mv"; "-i"; "invoice"; (executable_path ^ "invoice") |]) 
+			with
+				Unix_error(err, _, _) -> printf "Can't install, please run with sudo\n";
+			
+			print_endline ("Great, you can run invoice from anywhere on your computer now!")
 		| _ -> ()
 end
 
