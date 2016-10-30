@@ -66,7 +66,7 @@ let rec write_file file_o (j : Yojson.Basic.json) = function
 let generate_pdf_from_html_in_directory dir =
 	let html_o_path = dir ^ "/invoice.html" in
 	let pdf_o_path = dir ^ "/invoice.pdf" in
-	try (Unix.execvp "_wkhtmltopdf" [| "_wkhtmltopdf"; html_o_path; pdf_o_path |]) with
+	try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
 	Unix_error(err, _, _) -> printf "Pdf not generated, you can install wkhtmltopdf to generate pdfs\n"
 ;;
 
@@ -78,12 +78,30 @@ let units = ref 0.0
 let amount = ref 0.0
 let tva = ref 0.0
 let invoice_date = ref ""
+let generate_pdf_enabled = ref false
+let is_invoice_folder dir =
+	Str.string_match (Str.regexp "[0-9]*\\.[0-9]*\\.[0-9]*") dir 0(* TODO: why {nr} doesn't work in regex? *)
+;;
+let list_of_invoices dir =
+	let subdirs = Sys.readdir dir in
+	let subdirs_list = Array.to_list subdirs in
+	let invoices = List.filter (fun s -> is_invoice_folder s) subdirs_list in
+	invoices
+;;
 let find_last_invoice_dir in_dir new_date =
-	let children = Sys.readdir in_dir in
-	let last_date = ref (Array.get children (Array.length children - 1)) in ();
-	if !last_date = new_date then
-		last_date := Array.get children (Array.length children - 2);
-	!last_date
+	let invoices = list_of_invoices in_dir in
+	let invoices_reversed = List.rev invoices in
+	if List.length invoices_reversed > 0 then begin
+		let last_date = ref (List.hd invoices_reversed) in
+		if !last_date = new_date && List.length invoices_reversed > 1 then
+			last_date := (List.nth invoices_reversed 1)
+		else
+			last_date := "0";
+		!last_date
+	end else "0"
+;;
+let set_pdf b =
+	generate_pdf_enabled := b
 ;;
 
 let main = begin
@@ -96,7 +114,8 @@ let main = begin
 		("-units", Arg.Set_float units, "<float> Amount of worked hours");
 		("-hours", Arg.Set_float units, "<float> Amount of worked hours");
 		("-exchange-rate", Arg.Set_float exchange_rate, "<float> Currency conversion rate");
-		("-date", Arg.Set_string invoice_date, "<year.month.day> Date of invoice, written with numbers");
+		("-date", Arg.Set_string invoice_date, "<year.month.day> Date of invoice, ex: 2016.12.25");
+		("-pdf", Arg.Bool set_pdf, "<> Generate pdf. You need wkhtmltopdf installed");
 	] in
 	let command = ref "help" in
 	Arg.parse man (fun anon -> command := anon) usage;
@@ -116,10 +135,10 @@ let main = begin
 			(* Open json *)
 			let json = ref (Yojson.Basic.from_file prev_json_path) in
 			let open Yojson.Basic.Util in
-		 	let previous_invoice_date = !json |> member "invoice_date" |> to_string in
+		 	(* let previous_invoice_date = !json |> member "invoice_date" |> to_string in *)
 		 	let previous_invoice_nr = !json |> member "invoice_nr" |> to_int in
-		 	let previous_rate = !json |> member "rate" |> to_float in
-		 	let previous_tva = !json |> member "tva" |> to_float in
+		 	(* let previous_rate = !json |> member "rate" |> to_float in *)
+		 	(* let previous_tva = !json |> member "tva" |> to_float in *)
 			let amount_per_unit = ref 0.0 in
 			let amount_total = ref 0.0 in
 			print_endline ("Input data:");
@@ -185,21 +204,19 @@ let main = begin
 		  	close_out file_o;
 			printf "Html generated\n";
 
-			generate_pdf_from_html_in_directory new_invoice_dir;
+			if !generate_pdf_enabled then generate_pdf_from_html_in_directory new_invoice_dir;
 			print_endline ("Thank you for generating the invoice from command line!")
 		| "list" ->
 			print_endline ("Existing invoices:");
 			let cwd = Sys.getcwd() in
-			let children = Sys.readdir cwd in
-			let list_children = Array.to_list children in
-			let list_invoices = List.filter (fun s -> (Str.string_match (Str.regexp "[0-9]*\\.[0-9]*\\.[0-9]*") s 0)) list_children in
-			List.iter print_endline list_invoices;
+			let invoices = list_of_invoices cwd in
+			List.iter print_endline invoices;
 		| "help" | "" ->
 			Arg.usage man usage
 		| "install" ->
 			let executable_path = (match Sys.os_type with
 				| "Unix" -> "/usr/local/bin/"
-				| "Win32" | "Cygwin" -> "c://program files"
+				| "Win32" | "Cygwin" -> "c://program files/"
 				| _ -> "") in
 			print_endline ("Installing to " ^ executable_path);
 			try 
