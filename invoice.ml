@@ -126,6 +126,9 @@ let main = begin
 			if !invoice_date = "" then begin
 				print_endline ("-date is a mandatory field. Run invoice -help for more info!");
 				exit 0
+			end else if is_invoice_folder !invoice_date = false then begin
+				print_endline ("-date is in the wrong format, use <year.month.day>!");
+				exit 0
 			end;
 			(* Find last invoice dir *)
 			let cwd = Sys.getcwd() in
