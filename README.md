@@ -11,7 +11,7 @@ And this is your invoice ready to print
 ![Screenshot](https://s12.postimg.org/3p9489pb1/Screen_Shot_2016_10_29_at_21_15_40.png)
 
 ### Motivation
-If you're like me, you probably organised your life away from monstruous and useless softwares like Microsoft Word suite. Invoicing websites are a good alternative, but is not probable to pay them to generate one invoice a month. So what i used so far, and i'm not alone, was a word doc that each month needed to be duplicated and updated with the new values. This takes time and space. Why not generate the invoices from the command line? We are programmers after all.
+If you're like me, you probably organised your life away from monstruous and useless softwares like Microsoft Word suite. Invoicing websites are a good alternative, but is not probable to pay them to generate one invoice a month. So what i used so far, and i'm not alone, was a word/excel doc that each month needed to be duplicated and updated with the new values. This takes useless time and space. Why not generate the invoices from the command line? We are programmers after all.
 
 ### Commands
 
@@ -64,3 +64,8 @@ Compile the invoice app with:
 ### Dependencies
 
 Invoice cmd can generate html pages that you can open in a browser and then print, but if you prefer it can generate pdf with the help of http://wkhtmltopdf.org You just need to install it.
+
+### Contribution
+
+ 1) You can help this software grow by submitting invoicing templates as a html (use pull requests for that) or even doc/pdf/screenshot (open an issue for that)
+ 2) Need two people willing to make builds for windows and linux from time to time. You need ocaml installed, which is the hardest part.
