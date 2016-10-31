@@ -47,15 +47,15 @@ Option 2: Download the sources and compile yourself. To compile you need the Oca
 	opam config env
 	
 
-Compile the invoice app with:
-	
-	// Quick compile
-	ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson -linkpkg
-	// Compile standalone/shippable app
-	ocamlfind ocamlopt str.cmxa unix.cmxa invoice.ml -o invoice -package yojson -linkpkg
-	
+Compile the invoice for byte-code, which means it needs ocaml to execute it
 
-Optionally, if you have Haxe installed you can use this command to compile and run the sample
+	ocamlfind ocamlc str.cma unix.cma invoice.ml -o invoice -package yojson -linkpkg
+
+Compile standalone/shippable app
+
+	ocamlfind ocamlopt str.cmxa unix.cmxa invoice.ml -o invoice -package yojson -linkpkg
+
+Optionally, if you have Haxe installed you can use this command to compile and run the sample in one shot
 
 	haxe compile.hxml
 
