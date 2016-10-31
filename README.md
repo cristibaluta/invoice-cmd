@@ -23,7 +23,7 @@ List the invoices you have generated in the past:
 
 Generate a new invoice. Data from the last invoice will be used (and incremented when necessary) in the current invoice. In this way if details changes you don't need to change the first template json
 
-	invoice generate -date 2016.11.16 -hours 184 -value 1000 -tva 0 -exchange-rate 4.44
+	invoice generate -date 2016.11.16 -hours 184 -amount 1000 -tva 0 -exchange-rate 4.44
 
 ### Installing
 
