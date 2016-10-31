@@ -80,7 +80,7 @@ let tva = ref 0.0
 let invoice_date = ref ""
 let generate_pdf_enabled = ref false
 let is_invoice_folder dir =
-	Str.string_match (Str.regexp "[0-9]*\\.[0-9]*\\.[0-9]*") dir 0(* TODO: why {nr} doesn't work in regex? *)
+	Str.string_match (Str.regexp "[0-9][0-9][0-9][0-9]\\.[0-9][0-9]\\.[0-9][0-9]") dir 0
 ;;
 let list_of_invoices dir =
 	let subdirs = Sys.readdir dir in
