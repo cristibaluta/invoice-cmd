@@ -115,7 +115,7 @@ let main = begin
 		("-hours", Arg.Set_float units, "<float> Amount of worked hours");
 		("-exchange-rate", Arg.Set_float exchange_rate, "<float> Currency conversion rate");
 		("-date", Arg.Set_string invoice_date, "<year.month.day> Date of invoice, ex: 2016.12.25");
-		("-pdf", Arg.Bool set_pdf, "<> Generate pdf. You need wkhtmltopdf installed");
+		("-pdf", Arg.Bool set_pdf, "<true/false> Generate pdf. You need wkhtmltopdf installed");
 	] in
 	let command = ref "help" in
 	Arg.parse man (fun anon -> command := anon) usage;
@@ -222,10 +222,10 @@ let main = begin
 				| "Win32" | "Cygwin" -> "c://program files/"
 				| _ -> "") in
 			print_endline ("Installing to " ^ executable_path);
-			try 
+			(try 
 				(Unix.execvp "mv" [| "mv"; "-i"; "invoice"; (executable_path ^ "invoice") |]) 
 			with
-				Unix_error(err, _, _) -> printf "Can't install, please run with sudo\n";
+				Unix_error(err, _, _) -> printf "Can't install, please run with sudo\n");
 			
 			print_endline ("Great, you can run invoice from anywhere on your computer now!")
 		| _ -> ()
