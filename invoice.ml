@@ -16,17 +16,16 @@ let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholde
 	| "amount_total" -> Printf.sprintf "%.2f" (j |> member placeholder |> to_float)
 	| _ -> j |> member placeholder |> to_string
 ;;
-let load_file file_name =
-  let in_channel = open_in file_name in
-  let rec read_recursive lines =
-    try
-      Scanf.fscanf in_channel "%[^\r\n]\n" (fun x -> read_recursive (x :: lines))
-    with
-      End_of_file ->
-        lines in
-  let lines = read_recursive [] in
-  let _ = close_in_noerr in_channel in
-  List.rev (lines)
+let load_file file =
+	let in_channel = open_in file in
+	let rec read_recursive lines =
+		try
+			let line = input_line in_channel in
+			read_recursive (line :: lines)
+		with End_of_file -> lines in
+	let lines = read_recursive [] in
+	let _ = close_in_noerr in_channel in
+	List.rev (lines)
 ;;
 let placeholders = ["email"; "phone"; "web"; "invoice_date"; "invoice_series"; "invoice_nr";
 	"contractor_name"; "contractor_orc"; "contractor_cui"; "contractor_address"; "contractor_county"; "contractor_bank_account"; "contractor_bank_name";
