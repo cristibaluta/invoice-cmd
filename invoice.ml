@@ -102,6 +102,26 @@ let find_last_invoice_dir in_dir new_date =
 let set_pdf b =
 	generate_pdf_enabled := b
 ;;
+let print_invoice_details invoice =
+	let cwd = Sys.getcwd() in
+	let json_path = cwd ^ "/" ^ invoice ^ "/data.json" in
+	let json = ref (Yojson.Basic.from_file json_path) in
+	let open Yojson.Basic.Util in
+	let series = !json |> member "invoice_series" |> to_string in
+	let nr = !json |> member "invoice_nr" |> to_int in
+	let exchange_rate = !json |> member "exchange_rate" |> to_float in
+	let currency = !json |> member "currency" |> to_string in
+	let amount = !json |> member "amount" |> to_float in
+	let rate = !json |> member "rate" |> to_float in
+	let units = !json |> member "units" |> to_float in
+	print_endline (invoice ^ " -> " ^ 
+		series ^ 
+		(Printf.sprintf "%03d" nr) ^ " " ^ 
+		(string_of_float exchange_rate) ^ "€/" ^ currency ^ " " ^
+		(Printf.sprintf "%.2f" rate) ^ "€/hour " ^ 
+		(Printf.sprintf "%.2f" units) ^ "hours " ^ 
+		(Printf.sprintf "%.2f" amount) ^ currency)
+;;
 
 let main = begin
 	(* Read the user input *)
@@ -212,7 +232,7 @@ let main = begin
 			print_endline ("Existing invoices:");
 			let cwd = Sys.getcwd() in
 			let invoices = list_of_invoices cwd in
-			List.iter print_endline invoices;
+			List.iter print_invoice_details invoices;
 		| "help" | "" ->
 			Arg.usage man usage
 		| "install" ->
