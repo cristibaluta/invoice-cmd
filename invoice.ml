@@ -5,15 +5,31 @@ open Printf
 open Arg
 open Unix
 
+let exchange_rate_precision = ref 2
+let amount_precision = ref 2
+let number_of_decimals value =
+	let str_value = string_of_float value in
+	let comps = Str.split (Str.regexp "\\.") str_value in
+	let decimals = List.nth comps 1 in
+	String.length decimals
+;;
+let value_with_precision value precision = match precision with
+	| 0 -> Printf.sprintf "%.0f" value
+	| 1 -> Printf.sprintf "%.1f" value
+	| 2 -> Printf.sprintf "%.2f" value
+	| 3 -> Printf.sprintf "%.3f" value
+	| 4 -> Printf.sprintf "%.4f" value
+	| _ -> Printf.sprintf "%f" value
+;;
 let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholder with
 	| "invoice_nr" -> Printf.sprintf "%03d" (j |> member placeholder |> to_int)
-	| "rate"
 	| "exchange_rate"
-	| "units"
+	| "amount_per_unit" -> value_with_precision (j |> member placeholder |> to_float) !exchange_rate_precision
 	| "amount"
-	| "amount_per_unit"
+	| "amount_total" -> value_with_precision (j |> member placeholder |> to_float) !amount_precision
+	| "units"
 	| "tva"
-	| "amount_total" -> Printf.sprintf "%.2f" (j |> member placeholder |> to_float)
+	| "rate" -> value_with_precision (j |> member placeholder |> to_float) 2
 	| _ -> j |> member placeholder |> to_string
 ;;
 let load_file file =
@@ -125,7 +141,7 @@ let print_invoice_details invoice =
 
 let main = begin
 	(* Read the user input *)
-	let usage = "invoice-cmd ©2016 Imagin soft\nUsage : \ninvoice [generate|list|install] [options]\nOptions :" in
+	let usage = "invoice-cmd ©2016 Imagin soft\nUsage : \ninvoice [make|list|install] [options]\nOptions :" in
 	let man = [
 		("-amount", Arg.Set_float amount, "<float> Amount to be paid");
 		("-tva", Arg.Set_float tva, "<float> VAT");
@@ -140,7 +156,7 @@ let main = begin
 	Arg.parse man (fun anon -> command := anon) usage;
 
 	match !command with
-		| "generate" ->
+		| "make" ->
 			
 			if !invoice_date = "" then begin
 				print_endline ("-date is a mandatory field. Run invoice -help for more info!");
@@ -203,6 +219,8 @@ let main = begin
 			end;
 			invoice_nr := previous_invoice_nr + 1;
 			amount_total := !amount +. !amount *. !tva /. 100.0;
+			amount_precision := number_of_decimals !amount;
+			exchange_rate_precision := number_of_decimals !exchange_rate;
 			
 			(* Write new json *)
 			let new_invoice_dir = !invoice_date in
@@ -247,7 +265,8 @@ let main = begin
 				Unix_error(err, _, _) -> printf "Can't install, please run with sudo\n");
 			
 			print_endline ("Great, you can run invoice from anywhere on your computer now!")
-		| _ -> ()
+		| _ ->
+			print_endline ("Inexistent command")
 end
 
 let () = main
