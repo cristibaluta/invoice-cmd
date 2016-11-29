@@ -8,7 +8,7 @@ open Unix
 let exchange_rate_precision = ref 2
 let amount_precision = ref 2
 let moth_name_for_month_number nr = match nr with
-	| 1 -> "Jan"
+	| 1 -> "Ian"
 	| 2 -> "Feb"
 	| 3 -> "Mar"
 	| 4 -> "Apr"
@@ -21,6 +21,22 @@ let moth_name_for_month_number nr = match nr with
 	| 11 -> "Nov"
 	| 12 -> "Dec"
 	| _ -> ""
+;;
+let format_date date =
+	let comps = Str.split (Str.regexp "\\.") date in
+	((List.nth comps 2) ^"-"^ (moth_name_for_month_number (int_of_string (List.nth comps 1))) ^"-"^ (List.nth comps 0))
+;;
+let format_large_number nr_str =
+	let comps = Str.split (Str.regexp "\\.") nr_str in
+	let real_nr = List.hd comps in
+	let real_nr_comps = Str.split (Str.regexp "") real_nr in
+	if List.length real_nr_comps > 3 then begin
+		let frst = List.hd real_nr_comps in
+		let last = String.concat "" (List.tl real_nr_comps) in
+		frst ^ "," ^ last ^ "." ^ (List.nth comps 1)
+	end else begin
+		"" ^ nr_str
+	end
 ;;
 let number_of_decimals value =
 	let str_value = string_of_float value in
@@ -41,14 +57,11 @@ let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholde
 	| "exchange_rate"
 	| "amount_per_unit" -> value_with_precision (j |> member placeholder |> to_float) !exchange_rate_precision
 	| "amount"
-	| "amount_total" -> value_with_precision (j |> member placeholder |> to_float) !amount_precision
+	| "amount_total" -> format_large_number (value_with_precision (j |> member placeholder |> to_float) !amount_precision)
 	| "units"
 	| "tva"
 	| "rate" -> value_with_precision (j |> member placeholder |> to_float) 2
-	| "invoice_date" ->
-		let date = j |> member placeholder |> to_string in
-		let comps = Str.split (Str.regexp "\\.") date in
-		((List.nth comps 2) ^" "^ (moth_name_for_month_number (int_of_string (List.nth comps 1))) ^" "^ (List.nth comps 0))
+	| "invoice_date" -> format_date (j |> member placeholder |> to_string)
 	| _ -> j |> member placeholder |> to_string
 ;;
 let load_file file =
