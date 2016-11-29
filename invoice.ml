@@ -7,6 +7,21 @@ open Unix
 
 let exchange_rate_precision = ref 2
 let amount_precision = ref 2
+let moth_name_for_month_number nr = match nr with
+	| 1 -> "Jan"
+	| 2 -> "Feb"
+	| 3 -> "Mar"
+	| 4 -> "Apr"
+	| 5 -> "Mai"
+	| 6 -> "Iun"
+	| 7 -> "Iul"
+	| 8 -> "Aug"
+	| 9 -> "Sept"
+	| 10 -> "Oct"
+	| 11 -> "Nov"
+	| 12 -> "Dec"
+	| _ -> ""
+;;
 let number_of_decimals value =
 	let str_value = string_of_float value in
 	let comps = Str.split (Str.regexp "\\.") str_value in
@@ -30,6 +45,10 @@ let value_for_placeholder placeholder (j : Yojson.Basic.json) = match placeholde
 	| "units"
 	| "tva"
 	| "rate" -> value_with_precision (j |> member placeholder |> to_float) 2
+	| "invoice_date" ->
+		let date = j |> member placeholder |> to_string in
+		let comps = Str.split (Str.regexp "\\.") date in
+		((List.nth comps 2) ^" "^ (moth_name_for_month_number (int_of_string (List.nth comps 1))) ^" "^ (List.nth comps 0))
 	| _ -> j |> member placeholder |> to_string
 ;;
 let load_file file =
