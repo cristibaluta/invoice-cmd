@@ -30,11 +30,14 @@
 	"product" : "Product or service name",
 	"rate" : 0.0,
 	"exchange_rate" : 0.0,
+	"units_name" : "ora",
 	"units" : 0.0,
 	"amount_per_unit" : 0.0,
 	"amount" : 0.0,
 	
 	"amount_total" : 0.0,
 	"currency" : "CURRENCY",
-	"tva" : 0.0
+	"tva" : 0.0,
+	
+	"rows" : ""
 }

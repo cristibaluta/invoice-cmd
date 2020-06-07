@@ -26,17 +26,31 @@ let format_date date =
 	let comps = Str.split (Str.regexp "\\.") date in
 	((List.nth comps 2) ^"-"^ (moth_name_for_month_number (int_of_string (List.nth comps 1))) ^"-"^ (List.nth comps 0))
 ;;
+let rec insert_at x n = function
+    | [] -> [x]
+    | h :: t as l -> if n = 0 then x :: l else h :: insert_at x (n-1) t
+;;
 let format_large_number nr_str =
 	let comps = Str.split (Str.regexp "\\.") nr_str in
 	let real_nr = List.hd comps in
 	let real_nr_comps = Str.split (Str.regexp "") real_nr in
-	if List.length real_nr_comps > 3 then begin
-		let frst = List.hd real_nr_comps in
-		let last = String.concat "" (List.tl real_nr_comps) in
-		frst ^ "," ^ last ^ "." ^ (List.nth comps 1)
+	let real_nr_length = List.length real_nr_comps in
+	let real_nr_main = real_nr_length - 3 in
+	if real_nr_main > 0 then begin
+		let cl = insert_at "," real_nr_main real_nr_comps in
+		let nr_str_2 = String.concat "" cl in
+		"" ^ nr_str_2 ^ "." ^ (List.nth comps 1)
 	end else begin
 		"" ^ nr_str
 	end
+;;
+let roundf x = snd (modf (x +. copysign 0.5 x));;
+let round_to_decimals x decimals = 
+	let multiplier = ref 10.0 in
+	for i = 1 to (decimals - 1) do
+	  multiplier := !multiplier *. !multiplier
+	done;
+	roundf (x *. !multiplier) /. !multiplier
 ;;
 let number_of_decimals value =
 	let str_value = string_of_float value in
@@ -79,8 +93,9 @@ let placeholders = ["email"; "phone"; "web"; "invoice_date"; "invoice_series"; "
 	"contractor_name"; "contractor_orc"; "contractor_cui"; "contractor_address"; "contractor_county"; "contractor_bank_account"; "contractor_bank_name";
 	"client_name"; "client_orc"; "client_cui"; "client_address"; "client_county"; "client_bank_account"; "client_bank_name";
 	"delegate_name"; "delegate_ci_series"; "delegate_ci_nr"; "delegate_ci_released_by";
-	"product"; "rate"; "exchange_rate"; "units"; "amount"; "amount_per_unit";
-	"tva"; "amount_total"; "currency"
+	"product"; "rate"; "exchange_rate"; "units_name"; "units"; "amount"; "amount_per_unit";
+	"tva"; "amount_total"; "currency";
+	"rows"
 ]
 let rec iterate_placeholders placeholders lineString (j : Yojson.Basic.json) = match placeholders with
 	| [] -> lineString
@@ -110,9 +125,9 @@ let rec write_file file_o (j : Yojson.Basic.json) = function
 	  Printf.fprintf file_o "%s\n" (make_replacements e j);
 	  write_file file_o j tl
 ;;
-let generate_pdf_from_html_in_directory dir =
+let generate_pdf_from_html_in_directory dir pdf_name =
 	let html_o_path = dir ^ "/invoice.html" in
-	let pdf_o_path = dir ^ "/invoice.pdf" in
+	let pdf_o_path = dir ^ pdf_name in
 	try (Unix.execvp "wkhtmltopdf" [| "wkhtmltopdf"; html_o_path; pdf_o_path |]) with
 	Unix_error(err, _, _) -> printf "Pdf not generated, you can install wkhtmltopdf to generate pdfs\n"
 ;;
@@ -173,7 +188,7 @@ let print_invoice_details invoice =
 
 let main = begin
 	(* Read the user input *)
-	let usage = "invoice-cmd ©2016 Imagin soft\nUsage : \ninvoice [make|list|install] [options]\nOptions :" in
+	let usage = "invoice-cmd ©2016-2020 Imagin soft\nUsage : \ninvoice [make|list|install] [options]\nOptions :" in
 	let man = [
 		("-amount", Arg.Set_float amount, "<float> Amount to be paid");
 		("-tva", Arg.Set_float tva, "<float> VAT");
@@ -201,12 +216,16 @@ let main = begin
 			let cwd = Sys.getcwd() in
 			let prev_invoice_dir = find_last_invoice_dir cwd !invoice_date in
 			let html_template = load_file (cwd ^ "/0/template.html") in
+			let html_template_row = load_file (cwd ^ "/0/template_row.html") in
+			let html_template_row_string = ref (String.concat "" html_template_row) in
 			let prev_json_path = cwd ^ "/" ^ prev_invoice_dir ^ "/data.json" in
 			(* Open json *)
 			let json = ref (Yojson.Basic.from_file prev_json_path) in
 			let open Yojson.Basic.Util in
 		 	(* let previous_invoice_date = !json |> member "invoice_date" |> to_string in *)
+		 	let invoice_series = !json |> member "invoice_series" |> to_string in
 		 	let previous_invoice_nr = !json |> member "invoice_nr" |> to_int in
+		 	let product = !json |> member "product" |> to_string in
 		 	(* let previous_rate = !json |> member "rate" |> to_float in *)
 		 	(* let previous_tva = !json |> member "tva" |> to_float in *)
 			let amount_per_unit = ref 0.0 in
@@ -241,6 +260,14 @@ let main = begin
 				end;
 				print_endline ("  amount_per_unit : " ^ (string_of_float !amount_per_unit) );
 				
+			end else if (!rate <> 0.0 && !exchange_rate <> 0.0 && !units <> 0.0) then begin
+				(* Calculate the amount when you know the rate, exchange rate, and units *)
+
+				amount_per_unit := round_to_decimals (!rate *. !exchange_rate) 4;
+				amount := round_to_decimals (!units *. !amount_per_unit) 2;
+				print_endline ("  amount_per_unit : " ^ (string_of_float !amount_per_unit) );
+				print_endline ("  amount : " ^ (format_large_number (string_of_float !amount) ))
+				
 			end else begin
 				
 				print_endline ("Err: Not enough info to calculate the missing data! Needed data is:");
@@ -253,6 +280,16 @@ let main = begin
 			amount_total := !amount +. !amount *. !tva /. 100.0;
 			amount_precision := number_of_decimals !amount;
 			exchange_rate_precision := number_of_decimals !exchange_rate;
+			
+			(* Create first row *)
+			html_template_row_string := Str.global_replace (Str.regexp ("::nr::")) "1" !html_template_row_string;
+			html_template_row_string := Str.global_replace (Str.regexp ("::product::")) product !html_template_row_string;
+			html_template_row_string := Str.global_replace (Str.regexp ("::rate::")) (value_with_precision !rate 2) !html_template_row_string;
+			html_template_row_string := Str.global_replace (Str.regexp ("::exchange_rate::")) (string_of_float !exchange_rate) !html_template_row_string;
+			html_template_row_string := Str.global_replace (Str.regexp ("::units_name::")) "ora" !html_template_row_string;
+			html_template_row_string := Str.global_replace (Str.regexp ("::units::")) (value_with_precision !units 2) !html_template_row_string;
+			html_template_row_string := Str.global_replace (Str.regexp ("::amount_per_unit::")) (string_of_float !amount_per_unit) !html_template_row_string;
+			html_template_row_string := Str.global_replace (Str.regexp ("::amount::")) (format_large_number (string_of_float !amount) ) !html_template_row_string;
 			
 			(* Write new json *)
 			let new_invoice_dir = !invoice_date in
@@ -267,6 +304,7 @@ let main = begin
 			json := update "rate" (`Float !rate) !json;
 			json := update "exchange_rate" (`Float !exchange_rate) !json;
 			json := update "units" (`Float !units) !json;
+			json := update "rows" (`String !html_template_row_string) !json;
 			Yojson.Basic.to_file json_o_path !json;
 
 			(* Write html *)
@@ -276,8 +314,11 @@ let main = begin
 		  	close_out file_o;
 			printf "Html generated\n";
 
-			if !generate_pdf_enabled then generate_pdf_from_html_in_directory new_invoice_dir;
-			print_endline ("Thank you for generating the invoice from command line!")
+			if !generate_pdf_enabled then begin 
+				let pdf_name = "/invoice-" ^ invoice_series ^ (string_of_int !invoice_nr) ^ "-" ^ !invoice_date ^ ".pdf" in
+				generate_pdf_from_html_in_directory new_invoice_dir pdf_name;
+				print_endline ("Pdf generated\n")
+			end
 		| "list" ->
 			print_endline ("Existing invoices:");
 			let cwd = Sys.getcwd() in

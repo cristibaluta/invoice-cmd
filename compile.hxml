@@ -6,6 +6,7 @@
 -cmd ./../../invoice list
 
 # Generate invoice knowing the total amount, units and exchange rate
--cmd ./../../invoice make -amount 2980.55 -hours 120 -exchange-rate 4.5427 -date 2016.10.15 -pdf false
+# -cmd ./../../invoice make -amount 2980.55 -hours 120 -exchange-rate 4.5427 -date 2016.10.15 -pdf false
+-cmd ./../../invoice make -rate 17 -exchange-rate 4.8421 -units 160 -date 2020.04.30 -pdf true
 
 # -cmd ocamlfind ocamlopt str.cmxa unix.cmxa invoice.ml -o invoice -package yojson -linkpkg
